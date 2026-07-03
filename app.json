@@ -70,7 +70,17 @@
         }
       ],
       "expo-asset",
-      "expo-secure-store"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableProguardInReleaseBuilds": true,
+            "shrinkResources": true,
+            "extraProguardRules": "-keep class com.powersync.** { *; }\n-keep class com.op.sqlite.** { *; }"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
