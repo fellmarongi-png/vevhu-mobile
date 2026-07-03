@@ -1,0 +1,183 @@
+# PowerSync
+
+## Docs
+
+- [Architecture Overview](https://docs.powersync.com/architecture/architecture-overview.md): Overview of how PowerSync works: a sync service, client SDKs, and a backend integration layer that keeps local SQLite in sync with your database.
+- [Client Architecture](https://docs.powersync.com/architecture/client-architecture.md): How the PowerSync Client SDK manages connections, local SQLite storage, and the upload queue.
+- [Consistency](https://docs.powersync.com/architecture/consistency.md): How PowerSync uses checkpoints and causal consistency to keep client data consistent with the backend.
+- [PowerSync Protocol](https://docs.powersync.com/architecture/powersync-protocol.md): Technical overview of the sync protocol between PowerSync clients and the Service.
+- [PowerSync Service](https://docs.powersync.com/architecture/powersync-service.md): Understand the PowerSync Service architecture and how it replicates data and delivers real-time sync.
+- [Attachments / Files](https://docs.powersync.com/client-sdks/advanced/attachments.md): Sync file attachments like images and PDFs without storing them in the database, using an offline-first queue for uploads and downloads.
+- [Background Syncing](https://docs.powersync.com/client-sdks/advanced/background-syncing.md): Run PowerSync sync operations while your app is in the background to keep local data up to date.
+- [CRDT Data Structures](https://docs.powersync.com/client-sdks/advanced/crdts.md): Use CRDT data structures from libraries like Yjs alongside PowerSync for conflict-free collaborative editing with offline sync support.
+- [JSON, Arrays and Custom Types](https://docs.powersync.com/client-sdks/advanced/custom-types-arrays-and-json.md): Sync JSON, JSONB, arrays, and other custom Postgres types through PowerSync by serializing them to text.
+- [Data Encryption](https://docs.powersync.com/client-sdks/advanced/data-encryption.md): Secure client-side data with encryption in transit via TLS and at rest for SQLite databases.
+- [GIS Data: PostGIS](https://docs.powersync.com/client-sdks/advanced/gis-data-postgis.md): Sync PostGIS geographic data through PowerSync and query it on the client using SQLite spatial tools.
+- [Local-Only Usage](https://docs.powersync.com/client-sdks/advanced/local-only-usage.md): Use PowerSync for local-only data persistence without backend sync or authentication.
+- [Pre-Seeding SQLite Databases](https://docs.powersync.com/client-sdks/advanced/pre-seeded-sqlite.md): Speed up initial sync by pre-seeding SQLite databases with baseline data so users can start working immediately after app installation.
+- [Querying JSON Data in SQLite](https://docs.powersync.com/client-sdks/advanced/query-json-in-sqlite.md): How to query JSON data synced from your backend and stored as strings in SQLite using `json_extract` and JSON operators.
+- [Raw SQLite Tables to Bypass JSON View Limitations](https://docs.powersync.com/client-sdks/advanced/raw-tables.md): Access raw SQLite tables to bypass JSON view limitations for native SQLite functionality and better query performance.
+- [Sequential ID Mapping](https://docs.powersync.com/client-sdks/advanced/sequential-id-mapping.md): Map local UUIDs to server-assigned sequential IDs when your backend requires integer primary keys.
+- [Using SQLite Extensions](https://docs.powersync.com/client-sdks/advanced/sqlite-extensions.md): Extend capabilities in client-side databases with custom SQLite extensions
+- [State Management Libraries](https://docs.powersync.com/client-sdks/advanced/state-management.md): Use PowerSync with state management libraries like Riverpod in Dart/Flutter apps.
+- [Unit Testing](https://docs.powersync.com/client-sdks/advanced/unit-testing.md): Set up unit tests for PowerSync in Dart and Flutter using mock databases and isolated sync configurations.
+- [Cascading Delete](https://docs.powersync.com/client-sdks/cascading-delete.md): Implement cascading deletes in client-side SQLite using triggers and upload queue handlers.
+- [Expo Go Support](https://docs.powersync.com/client-sdks/frameworks/expo-go-support.md): Run PowerSync in Expo Go without native modules using @powersync/adapter-sql-js.
+- [Dart/Flutter Web Support (Beta)](https://docs.powersync.com/client-sdks/frameworks/flutter-web-support.md): Set up the PowerSync Flutter SDK for web with Chrome and WASM support.
+- [Next.js + PowerSync](https://docs.powersync.com/client-sdks/frameworks/next-js.md): Learn how to build highly responsive Next.js applications with PowerSync.
+- [Nuxt Integration](https://docs.powersync.com/client-sdks/frameworks/nuxt.md): Integrate PowerSync with Nuxt for offline-first Vue applications.
+- [React Hooks](https://docs.powersync.com/client-sdks/frameworks/react.md): Use PowerSync React hooks including useQuery, useStatus, and useSuspenseQuery to build reactive components with live query results.
+- [React Native Web Support](https://docs.powersync.com/client-sdks/frameworks/react-native-web-support.md): Configure PowerSync for React Native Web projects.
+- [TanStack Query & TanStack DB](https://docs.powersync.com/client-sdks/frameworks/tanstack.md): Use PowerSync with TanStack Query for server state caching and TanStack DB for optimistic local-first mutations in JavaScript apps.
+- [Vue Composables](https://docs.powersync.com/client-sdks/frameworks/vue.md): Use PowerSync Vue composables including useQuery and useStatus to build reactive components with live query results.
+- [Full-Text Search](https://docs.powersync.com/client-sdks/full-text-search.md): Implement client-side full-text search using SQLite's FTS5 extension with PowerSync.
+- [Experimental: High Performance Diffs](https://docs.powersync.com/client-sdks/high-performance-diffs.md): Get row-level change notifications using trigger-based table diffs in JavaScript SDKs.
+- [Infinite Scrolling](https://docs.powersync.com/client-sdks/infinite-scrolling.md): Implement infinite scrolling with PowerSync using paginated SQL queries against the local SQLite database.
+- [Dart/Flutter ORM Support](https://docs.powersync.com/client-sdks/orms/flutter-orm-support.md): Use the Drift ORM with the PowerSync Flutter SDK via drift_sqlite_async.
+- [Drizzle](https://docs.powersync.com/client-sdks/orms/js/drizzle.md): Use the Drizzle ORM with PowerSync's JavaScript and React Native SDKs.
+- [Kysely](https://docs.powersync.com/client-sdks/orms/js/kysely.md): Use the Kysely query builder with PowerSync's JavaScript and React Native SDKs.
+- [JavaScript ORMs Overview](https://docs.powersync.com/client-sdks/orms/js/overview.md): Overview of ORM and query builder integrations for PowerSync JavaScript SDKs, including Drizzle, Kysely, and TanStack DB.
+- [TanStack DB](https://docs.powersync.com/client-sdks/orms/js/tanstack-db.md): Use PowerSync with TanStack DB for optimistic mutations and live queries in JavaScript apps.
+- [Kotlin SQL Libraries](https://docs.powersync.com/client-sdks/orms/kotlin/overview.md): Overview of SQL mapping library options for the PowerSync Kotlin SDK, including Room and SQLDelight.
+- [Room (Beta)](https://docs.powersync.com/client-sdks/orms/kotlin/room.md): Use Android Room with PowerSync's Kotlin SDK.
+- [SQLDelight (Beta)](https://docs.powersync.com/client-sdks/orms/kotlin/sqldelight.md): Use SQLDelight with PowerSync's Kotlin SDK.
+- [ORM Support Overview](https://docs.powersync.com/client-sdks/orms/overview.md): Choose a type-safe ORM or query builder for PowerSync instead of writing raw SQL queries.
+- [GRDB (Alpha)](https://docs.powersync.com/client-sdks/orms/swift/grdb.md): Use the GRDB SQLite library with PowerSync's Swift SDK.
+- [Client SDKs Overview](https://docs.powersync.com/client-sdks/overview.md): Overview of PowerSync's official client SDKs.
+- [Reading Data](https://docs.powersync.com/client-sdks/reading-data.md): Query data from your local SQLite database using SQL with the PowerSync SDK.
+- [Capacitor SDK (beta)](https://docs.powersync.com/client-sdks/reference/capacitor.md): Use PowerSync in Capacitor apps.
+- [Capacitor SDK API Reference](https://docs.powersync.com/client-sdks/reference/capacitor-api.md): Full API reference for the PowerSync Capacitor SDK.
+- [.NET SDK (beta)](https://docs.powersync.com/client-sdks/reference/dotnet.md): Use PowerSync in .NET apps (beta).
+- [Dart/Flutter SDK](https://docs.powersync.com/client-sdks/reference/flutter.md): Use PowerSync in Dart and Flutter apps.
+- [Flutter SDK API Reference](https://docs.powersync.com/client-sdks/reference/flutter-api.md): Full API reference for the PowerSync Dart/Flutter SDK.
+- [JavaScript Web SDK](https://docs.powersync.com/client-sdks/reference/javascript-web.md): Use PowerSync in JavaScript Web apps.
+- [JavaScript Web SDK API Reference](https://docs.powersync.com/client-sdks/reference/javascript-web-api.md): Full API reference for the PowerSync JavaScript Web SDK.
+- [Kotlin SDK](https://docs.powersync.com/client-sdks/reference/kotlin.md): Use PowerSync in Kotlin Multiplatform apps.
+- [Kotlin SDK API Reference](https://docs.powersync.com/client-sdks/reference/kotlin-api.md): Full API reference for the PowerSync Kotlin Multiplatform SDK.
+- [Node.js client SDK (Beta)](https://docs.powersync.com/client-sdks/reference/node.md): Use PowerSync in Node.js apps.
+- [Node.js SDK API Reference](https://docs.powersync.com/client-sdks/reference/node-api.md): Full API reference for the PowerSync Node.js SDK.
+- [React Native & Expo SDK](https://docs.powersync.com/client-sdks/reference/react-native-and-expo.md): Use PowerSync in React Native (& Expo) apps.
+- [React Native SDK API Reference](https://docs.powersync.com/client-sdks/reference/react-native-api.md): Full API reference for the PowerSync React Native SDK.
+- [Rust SDK (alpha)](https://docs.powersync.com/client-sdks/reference/rust.md): Use PowerSync in Rust apps.
+- [Swift SDK](https://docs.powersync.com/client-sdks/reference/swift.md): Use PowerSync in Swift apps.
+- [Swift SDK API Reference](https://docs.powersync.com/client-sdks/reference/swift-api.md): Full API reference for the PowerSync Swift SDK.
+- [Tauri SDK (alpha)](https://docs.powersync.com/client-sdks/reference/tauri.md): Use PowerSync in Tauri apps.
+- [Usage Examples](https://docs.powersync.com/client-sdks/usage-examples.md): Code examples and common patterns for the PowerSync Client SDKs.
+- [Live Queries / Watch Queries](https://docs.powersync.com/client-sdks/watch-queries.md): Subscribe to live queries that re-run automatically when local SQLite data changes.
+- [Writing Data](https://docs.powersync.com/client-sdks/writing-data.md): Write data to the local SQLite database and manage the upload queue with the PowerSync SDK.
+- [Client-Side Integration With Your Backend](https://docs.powersync.com/configuration/app-backend/client-side-integration.md): Connect your client app to a PowerSync-compatible backend using the connector interface and upload queue.
+- [CloudCode for MongoDB Backends](https://docs.powersync.com/configuration/app-backend/cloudcode.md): Use JourneyApps CloudCode as a managed backend for PowerSync with MongoDB.
+- [App Backend Setup](https://docs.powersync.com/configuration/app-backend/setup.md): Configure your app backend to process client-side mutations from the PowerSync upload queue.
+- [Auth0](https://docs.powersync.com/configuration/auth/auth0.md): Configure Auth0 as your authentication provider for PowerSync.
+- [Custom Authentication](https://docs.powersync.com/configuration/auth/custom.md): Implement custom JWT-based authentication for PowerSync using any auth provider.
+- [Development Tokens](https://docs.powersync.com/configuration/auth/development-tokens.md): Generate temporary development tokens for testing PowerSync authentication without a full auth provider.
+- [Firebase Auth](https://docs.powersync.com/configuration/auth/firebase-auth.md): Configure Firebase Authentication for PowerSync.
+- [Authentication Setup](https://docs.powersync.com/configuration/auth/overview.md): Set up JWT-based client authentication for PowerSync using development tokens, supported auth providers like Auth0 and Firebase, or custom JWTs.
+- [Supabase Auth](https://docs.powersync.com/configuration/auth/supabase-auth.md): Use Supabase Auth with PowerSync by verifying Supabase JWTs directly.
+- [Stytch + Supabase](https://docs.powersync.com/configuration/auth/supabase-auth/stytch.md): Set up Stytch authentication with Supabase for PowerSync.
+- [PowerSync Cloud Instances](https://docs.powersync.com/configuration/powersync-service/cloud-instances.md): Create and configure PowerSync Cloud instances with a database connection.
+- [Self-Hosted Instance Configuration](https://docs.powersync.com/configuration/powersync-service/self-hosted-instances.md): Configure self-hosted PowerSync Service deployments using YAML or environment variables.
+- [Source Database Connection](https://docs.powersync.com/configuration/source-db/connection.md): Connect a PowerSync Cloud instance to your Postgres, MongoDB, MySQL, SQL Server or Convex source database.
+- [Postgres Maintenance](https://docs.powersync.com/configuration/source-db/postgres-maintenance.md): Manage Postgres replication slots and WAL lag for reliable PowerSync replication.
+- [Private Endpoints](https://docs.powersync.com/configuration/source-db/private-endpoints.md): Connect PowerSync Cloud to your database over AWS PrivateLink without public internet exposure.
+- [Security & IP Filtering](https://docs.powersync.com/configuration/source-db/security-and-ip-filtering.md): Restrict database access to PowerSync Cloud using static IP allowlisting by deployment region.
+- [Source Database Setup](https://docs.powersync.com/configuration/source-db/setup.md): Prepare your Postgres, MongoDB, MySQL, SQL Server or Convex database for PowerSync replication.
+- [Advanced SQL Server Configuration](https://docs.powersync.com/configuration/source-db/sql-server-additional-configuration.md): Configure advanced SQL Server adapter options for self-hosted PowerSync.
+- [Error Codes Reference](https://docs.powersync.com/debugging/error-codes.md): Reference of PowerSync error codes with explanations and troubleshooting guidance.
+- [Troubleshooting](https://docs.powersync.com/debugging/troubleshooting.md): Diagnose and fix common PowerSync issues using logs, diagnostics, and troubleshooting tools.
+- [Custom Conflict Resolution](https://docs.powersync.com/handling-writes/custom-conflict-resolution.md): Implement custom conflict resolution in PowerSync for concurrent updates from multiple offline clients.
+- [Data Pipelines](https://docs.powersync.com/handling-writes/custom-write-checkpoints.md): Use Custom Write Checkpoints to track asynchronous data uploads through chained data pipelines and confirm write completion on the client.
+- [Handling Update Conflicts](https://docs.powersync.com/handling-writes/handling-update-conflicts.md): Understand how PowerSync resolves conflicts when multiple users update the same records while offline.
+- [Handling Write / Validation Errors](https://docs.powersync.com/handling-writes/handling-write-validation-errors.md): Handle transient and permanent write errors in the PowerSync upload queue.
+- [Writing Client Changes](https://docs.powersync.com/handling-writes/writing-client-changes.md): Build a backend API endpoint to apply client-side writes from the PowerSync upload queue to your source database.
+- [Neon + PowerSync](https://docs.powersync.com/integrations/neon.md): Build highly responsive, synced apps with Neon and PowerSync using a TypeScript demo app.
+- [Integrations Overview](https://docs.powersync.com/integrations/overview.md): Browse PowerSync integrations with backend services including Supabase, Neon, and Serverpod.
+- [Serverpod + PowerSync](https://docs.powersync.com/integrations/serverpod.md): Add offline-capable data sync to Serverpod projects using PowerSync.
+- [Improve Supabase Connector](https://docs.powersync.com/integrations/supabase/connector-performance.md): Optimize Supabase connector performance in PowerSync apps.
+- [Supabase + PowerSync](https://docs.powersync.com/integrations/supabase/guide.md): Build offline-first apps with Supabase and PowerSync across Flutter, React Native, Web, Kotlin, and Swift.
+- [Local Development with Supabase and PowerSync](https://docs.powersync.com/integrations/supabase/local-development.md): Set up local development with Supabase and PowerSync.
+- [Real-time Streaming](https://docs.powersync.com/integrations/supabase/realtime-streaming.md): Replace Supabase Realtime with PowerSync streaming sync and the watch() API for efficient, offline-capable database change listeners.
+- [RLS and Sync Streams](https://docs.powersync.com/integrations/supabase/rls-and-sync-streams.md): How PowerSync Sync Streams work alongside Supabase Row Level Security.
+- [Demo Apps & Example Projects](https://docs.powersync.com/intro/examples.md): Demo apps and example projects showcasing PowerSync across all supported platforms and backends.
+- [PowerSync Docs](https://docs.powersync.com/intro/powersync-overview.md): PowerSync is a sync engine that keeps your backend database in sync with in-app SQLite.
+- [PowerSync Philosophy](https://docs.powersync.com/intro/powersync-philosophy.md): PowerSync's vision is that local-first architecture should be easier to implement than cloud-first and deliver a better end-user experience.
+- [Self-Hosting](https://docs.powersync.com/intro/self-hosting.md): Get started self-hosting the PowerSync Service with Docker, including local dev setup via the PowerSync CLI.
+- [PowerSync Setup Guide](https://docs.powersync.com/intro/setup-guide.md): Step-by-step guide to adding PowerSync to your app, from connecting your source database to integrating the client SDK.
+- [Understanding the SQLite Database](https://docs.powersync.com/maintenance-ops/client-database-diagnostics.md): Analyze and debug the local PowerSync SQLite database on the client.
+- [Compacting Buckets](https://docs.powersync.com/maintenance-ops/compacting-buckets.md): Reduce storage and sync overhead by compacting and defragmenting data.
+- [Deploying Schema Changes](https://docs.powersync.com/maintenance-ops/deploying-schema-changes.md): Procedures for deploying schema changes in PowerSync.
+- [Implementing Schema Changes](https://docs.powersync.com/maintenance-ops/implementing-schema-changes.md): How PowerSync handles schema changes across Postgres, MongoDB, MySQL, SQL Server, and Convex during replication.
+- [Monitoring and Alerting](https://docs.powersync.com/maintenance-ops/monitoring-and-alerting.md): Set up monitoring and alerting for PowerSync Cloud instances to track replication and sync health, connection status, and common errors.
+- [Production Readiness Best Practices Guide](https://docs.powersync.com/maintenance-ops/production-readiness-guide.md): Best practices for running PowerSync reliably in production.
+- [Replication Lag](https://docs.powersync.com/maintenance-ops/replication-lag.md): Understand, monitor, and reduce replication lag between your source database and the PowerSync Service.
+- [Deploy PowerSync on AWS ECS](https://docs.powersync.com/maintenance-ops/self-hosting/aws-ecs.md): Deploy the self-hosted PowerSync Service on AWS ECS with Fargate.
+- [Deploy PowerSync on AWS EKS](https://docs.powersync.com/maintenance-ops/self-hosting/aws-eks.md): Deploy the self-hosted PowerSync Service on Kubernetes using the community Helm charts.
+- [Deploy PowerSync Service on Coolify](https://docs.powersync.com/maintenance-ops/self-hosting/coolify.md): Deploy the self-hosted PowerSync Service on Coolify with Docker Compose.
+- [Deployment Architecture](https://docs.powersync.com/maintenance-ops/self-hosting/deployment-architecture.md): Infrastructure and sizing recommendations for self-hosted PowerSync in staging and production.
+- [Diagnostics](https://docs.powersync.com/maintenance-ops/self-hosting/diagnostics.md): How to use the PowerSync Service Diagnostics API to inspect replication status, errors, and slot health.
+- [Health Checks](https://docs.powersync.com/maintenance-ops/self-hosting/healthchecks.md): Configure health check endpoints for self-hosted PowerSync Service deployments.
+- [Migrating Between Instances](https://docs.powersync.com/maintenance-ops/self-hosting/migrating-instances.md): Migrate users between self-hosted PowerSync instances with minimal downtime.
+- [Monitoring](https://docs.powersync.com/maintenance-ops/self-hosting/monitoring.md): Monitor a self-hosted PowerSync Service by scraping metrics from a Prometheus-compatible endpoint.
+- [Multiple PowerSync Instances](https://docs.powersync.com/maintenance-ops/self-hosting/multiple-instances.md): Run multiple self-hosted PowerSync instances for load distribution and high availability.
+- [Self-Hosting Maintenance & Ops](https://docs.powersync.com/maintenance-ops/self-hosting/overview.md): Production and operations guides for self-hosted PowerSync deployments.
+- [Railway + PowerSync](https://docs.powersync.com/maintenance-ops/self-hosting/railway.md): Deploy the PowerSync Service with a custom backend on Railway.
+- [Securing Your Deployment](https://docs.powersync.com/maintenance-ops/self-hosting/securing-your-deployment.md): Network architecture and security guidance for self-hosted PowerSync deployments.
+- [Update Sync Streams (Sync Config)](https://docs.powersync.com/maintenance-ops/self-hosting/update-sync-rules.md): Update Sync Streams/Sync Rules in a self-hosted PowerSync deployment.
+- [Usage Reporting](https://docs.powersync.com/maintenance-ops/self-hosting/usage-reporting.md): How self-hosted PowerSync collects anonymous usage metrics, and how to opt out.
+- [MongoDB Atlas Device Sync Migration Guide](https://docs.powersync.com/migration-guides/atlas-device-sync.md): Migrate from MongoDB Atlas Device Sync to PowerSync with step-by-step instructions.
+- [Contact Us](https://docs.powersync.com/resources/contact-us.md): Contact the PowerSync team via Discord, GitHub, email, or paid support.
+- [FAQ](https://docs.powersync.com/resources/faq.md): Frequently asked questions about PowerSync.
+- [Feature Status](https://docs.powersync.com/resources/feature-status.md): Current status of PowerSync features, including alpha and beta labels with API stability and SLA implications.
+- [HIPAA Compliance](https://docs.powersync.com/resources/hipaa.md): HIPAA compliance for PowerSync Cloud, including BAA availability and deployment requirements.
+- [Local-First Software](https://docs.powersync.com/resources/local-first-software.md): Understand the local-first software architecture pattern and how PowerSync enables it.
+- [Performance and Limits](https://docs.powersync.com/resources/performance-and-limits.md): Performance benchmarks and Service limits for PowerSync Cloud.
+- [Security & HIPAA](https://docs.powersync.com/resources/security.md): PowerSync Cloud's security posture, data protection practices, and encryption standards.
+- [Supported Platforms](https://docs.powersync.com/resources/supported-platforms.md): Supported platforms and feature availability for each PowerSync Client SDK across mobile, web, and desktop.
+- [Usage & Billing](https://docs.powersync.com/resources/usage-and-billing.md): Understand PowerSync Cloud usage-based billing.
+- [Pricing Example](https://docs.powersync.com/resources/usage-and-billing/pricing-example.md): Example showing how PowerSync Cloud plan costs are calculated based on synced operations and active users.
+- [FAQ & Troubleshooting](https://docs.powersync.com/resources/usage-and-billing/usage-and-billing-faq.md): Troubleshoot usage and billing issues and find answers to common questions about PowerSync Cloud usage metering and billing.
+- [Case Sensitivity](https://docs.powersync.com/sync/advanced/case-sensitivity.md): Handle case-sensitive table and column names in PowerSync Sync Streams/Rules, with best practices for lowercase identifiers and quoting strategies.
+- [Client ID](https://docs.powersync.com/sync/advanced/client-id.md): Understand PowerSync's requirement for a single text-type primary key column called id.
+- [Compatibility](https://docs.powersync.com/sync/advanced/compatibility.md): Configure compatibility editions and bucket storage format version in PowerSync's sync config.
+- [Multiple Client Versions](https://docs.powersync.com/sync/advanced/multiple-client-versions.md): Handle multiple client app versions that require different output schemas from Sync Streams.
+- [Advanced Topics](https://docs.powersync.com/sync/advanced/overview.md): Advanced Sync Streams and Sync Rules topics.
+- [Partitioned Tables (Postgres)](https://docs.powersync.com/sync/advanced/partitioned-tables.md): Sync data from Postgres partitioned tables using wildcard table name matching.
+- [Prioritized Sync](https://docs.powersync.com/sync/advanced/prioritized-sync.md): Prioritize which tables sync first so users can start working immediately while remaining data continues loading in the background.
+- [Schemas and Connections](https://docs.powersync.com/sync/advanced/schemas-and-connections.md): Configure Postgres schema usage in Sync Streams/Rules queries, connect to high-availability replicas, and plan for multiple database connections.
+- [Sharded Databases](https://docs.powersync.com/sync/advanced/sharded-databases.md): Sync data from sharded Postgres databases with per-shard PowerSync connection configuration.
+- [Sync Data by Time with Sync Streams](https://docs.powersync.com/sync/advanced/sync-data-by-time.md): Filter and sync data based on time ranges using Sync Streams/Sync Rules, with patterns for recent-only and sliding-window queries.
+- [Grammar Reference (Sync Rules)](https://docs.powersync.com/sync/grammar/sync-rules/index.md): Railroad diagram reference for the SQL grammar supported in legacy Sync Rules queries.
+- [Grammar Reference (Sync Streams)](https://docs.powersync.com/sync/grammar/sync-streams/index.md): Railroad diagram reference for the SQL grammar supported in Sync Streams queries.
+- [Sync Streams and Sync Rules](https://docs.powersync.com/sync/overview.md): PowerSync Sync Streams and the legacy Sync Rules allow developers to control which data syncs to which clients/devices (i.e. they enable partial sync).
+- [Client Parameters](https://docs.powersync.com/sync/rules/client-parameters.md): Pass dynamic parameters from the client SDK directly into Sync Rules queries to filter data per user, device, or application context.
+- [Data Queries](https://docs.powersync.com/sync/rules/data-queries.md): Write Data Queries in Sync Rules to select and filter data for buckets using bucket parameters.
+- [Global Buckets](https://docs.powersync.com/sync/rules/global-buckets.md): Set up global buckets in Sync Rules to sync shared reference data to all connected users without per-user filtering or parameter queries.
+- [Many-to-Many Relationships and Join Tables in Sync Rules](https://docs.powersync.com/sync/rules/many-to-many-join-tables.md): Handle many-to-many relationships in Sync Rules using join table strategies.
+- [Organize Data Into Buckets](https://docs.powersync.com/sync/rules/organize-data-into-buckets.md): Design Sync Rules to organize data into global and user-filtered buckets.
+- [Sync Rules (Legacy)](https://docs.powersync.com/sync/rules/overview.md): Understand legacy Sync Rules for controlling which data syncs to each client.
+- [Parameter Queries](https://docs.powersync.com/sync/rules/parameter-queries.md): Define bucket parameters in Sync Rules using Parameter Queries with JWT claims and client parameters.
+- [Client-Side Usage](https://docs.powersync.com/sync/streams/client-usage.md): Subscribe to Sync Streams from your client app and manage subscriptions dynamically.
+- [Common Table Expressions (CTEs)](https://docs.powersync.com/sync/streams/ctes.md): Reuse common query patterns across Sync Streams using Common Table Expressions (CTEs) to simplify configurations and reduce duplication.
+- [Examples, Patterns & Demos](https://docs.powersync.com/sync/streams/examples.md): Common Sync Streams patterns and real-world examples for different sync configurations.
+- [Migrating from Sync Rules](https://docs.powersync.com/sync/streams/migration.md): Migrate existing projects from legacy Sync Rules to Sync Streams.
+- [Sync Streams](https://docs.powersync.com/sync/streams/overview.md): Introduction to Sync Streams, the recommended way to define which data syncs to each client with SQL-based stream definitions.
+- [Using Parameters](https://docs.powersync.com/sync/streams/parameters.md): Filter synced data dynamically using subscription, auth, and connection parameters in Sync Streams queries.
+- [Writing Queries](https://docs.powersync.com/sync/streams/queries.md): Learn Sync Streams query syntax for filtering, column selection, and type transformations.
+- [Supported SQL](https://docs.powersync.com/sync/supported-sql.md): Reference for SQL syntax, operators, built-in functions, and type casting supported in Sync Streams/Sync Rules queries.
+- [Types](https://docs.powersync.com/sync/types.md): How Postgres, MongoDB, MySQL, SQL Server and Convex types map to PowerSync's SQLite-based sync column definitions.
+- [AI Tools](https://docs.powersync.com/tools/ai-tools.md): Set up AI coding tools for PowerSync, including installing agent skills and accessing context files.
+- [CLI](https://docs.powersync.com/tools/cli.md): Manage PowerSync Cloud and self-hosted instances from the command line.
+- [Dart & Flutter DevTools Extension](https://docs.powersync.com/tools/dart-devtools-extension.md): A Dart & Flutter DevTools extension for inspecting PowerSync databases, running SQL queries, and viewing sync status during development.
+- [DevTools Integrations](https://docs.powersync.com/tools/devtools-overview.md): IDE and framework DevTools integrations for inspecting PowerSync client-side databases and sync state during development.
+- [Sync Diagnostics Client](https://docs.powersync.com/tools/diagnostics-client.md): Inspect and debug PowerSync sync behavior with the Sync Diagnostics Client app, a standalone tool for testing Sync Streams.
+- [Run PowerSync Locally with Docker and the CLI](https://docs.powersync.com/tools/local-development.md): Set up PowerSync locally for development using Docker and the CLI.
+- [Nuxt DevTools Integration](https://docs.powersync.com/tools/nuxt-inspector.md): A Nuxt DevTools integration for inspecting PowerSync sync status, local data, config, and logs during development.
+- [Tools](https://docs.powersync.com/tools/overview.md): Overview of PowerSync developer tools: Dashboard, CLI, Diagnostics Client, DevTools integrations, and AI coding tools.
+- [PowerSync Dashboard](https://docs.powersync.com/tools/powersync-dashboard.md): Use the PowerSync Dashboard to manage instances, configure Sync Streams, and monitor usage.
+- [Terraform Provider](https://docs.powersync.com/tools/terraform.md): Manage PowerSync Cloud projects and instances as infrastructure-as-code.
+
+## Optional
+
+- [GitHub](https://github.com/powersync-ja)
+- [Community Discord](https://discord.com/invite/powersync)
+- [PowerSync Website](https://www.powersync.com/)

@@ -1,0 +1,350 @@
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { v4 as uuid } from "uuid";
+import { DynamicForm, type DynamicFormRef } from "../../src/components/form/DynamicForm";
+import { AudioRecorder } from "../../src/components/media/AudioRecorder";
+import { PhotoCapture } from "../../src/components/media/PhotoCapture";
+import { SignaturePad } from "../../src/components/media/SignaturePad";
+import { useAuth } from "../../src/hooks/useAuth";
+import { useLocation } from "../../src/hooks/useLocation";
+import { useWatchedQuery } from "../../src/hooks/usePowerSync";
+import { db } from "../../src/services/powersync";
+import type { FormSchema } from "../../src/types/form";
+
+const DEFAULT_SCHEMA: FormSchema = {
+  id: "default-v1",
+  version: 1,
+  name: "Field Collection Form",
+  is_active: true,
+  published_at: new Date().toISOString(),
+  fields: [
+    {
+      id: "stand_number_official",
+      type: "text",
+      label: "Stand Number (Official Record)",
+      required: true,
+      order: 1,
+    },
+    {
+      id: "stand_number_physical",
+      type: "text",
+      label: "Stand Number (On-Site Physical/Claimed)",
+      required: true,
+      order: 2,
+    },
+    {
+      id: "respondent_type",
+      type: "dropdown",
+      label: "Respondent Type",
+      required: true,
+      order: 3,
+      options: ["Registered Owner", "Tenant", "Caretaker/Relative", "Squatter"],
+    },
+    {
+      id: "respondent_name",
+      type: "text",
+      label: "Respondent Full Name",
+      required: true,
+      order: 4,
+    },
+    {
+      id: "respondent_phone",
+      type: "phone",
+      label: "Respondent Contact Number",
+      required: true,
+      order: 5,
+    },
+    {
+      id: "is_legal_owner",
+      type: "toggle",
+      label: "Is Respondent the Legal Owner?",
+      required: true,
+      order: 6,
+    },
+    {
+      id: "owner_name",
+      type: "text",
+      label: "Owner Full Name",
+      required: true,
+      order: 7,
+      section: "owner_details",
+      condition: { field: "is_legal_owner", value: false },
+    },
+    {
+      id: "owner_phone",
+      type: "phone",
+      label: "Owner Contact Details",
+      required: true,
+      order: 8,
+      section: "owner_details",
+      condition: { field: "is_legal_owner", value: false },
+    },
+    {
+      id: "account_standing",
+      type: "dropdown",
+      label: "Account Standing?",
+      required: true,
+      order: 9,
+      options: ["Yes", "No", "Unsure"],
+    },
+    {
+      id: "action_taken",
+      type: "dropdown",
+      label: "Action Taken",
+      required: false,
+      order: 10,
+      section: "account_action",
+      condition: { field: "account_standing", value: "No" },
+      options: [
+        "Verbal warning given",
+        "Left address flyer with resident",
+        "Owner called directly on-site",
+      ],
+    },
+    {
+      id: "field_notes",
+      type: "long_text",
+      label: "Field Notes / Observations",
+      required: false,
+      order: 11,
+    },
+  ],
+  scripts: [
+    {
+      id: "intro",
+      section: "intro",
+      text: "Good day. I am from Vevhu Resources. We are verifying property records ahead of council urbanization and rates assessment. Are you the registered owner of this stand?",
+    },
+    {
+      id: "owner_details",
+      section: "owner_details",
+      text: "Since you are managing the property, please provide the legal owner's current phone number so we can update the council database and protect this property layout.",
+      condition: { field: "is_legal_owner", value: false },
+    },
+    {
+      id: "account_action",
+      section: "account_action",
+      text: "Our records show your account needs regularization. Please visit our office within 7 days to formalize your standing before council rates take effect.",
+      condition: { field: "account_standing", value: "No" },
+    },
+  ],
+};
+
+export default function CollectScreen() {
+  const { user } = useAuth();
+  const { captureLocation } = useLocation();
+  const formRef = useRef<DynamicFormRef>(null);
+
+  const { data: schemaRows } = useWatchedQuery<{
+    fields: string;
+    scripts: string;
+    version: number;
+    name: string;
+  }>("SELECT * FROM form_schemas WHERE is_active = 1 ORDER BY version DESC LIMIT 1");
+
+  const activeSchema: FormSchema = useMemo(() => {
+    if (schemaRows && schemaRows.length > 0 && schemaRows[0].fields) {
+      try {
+        const row = schemaRows[0];
+        return {
+          id: `dynamic-v${row.version}`,
+          version: row.version,
+          name: row.name || "Field Collection Form",
+          is_active: true,
+          published_at: new Date().toISOString(),
+          fields: typeof row.fields === "string" ? JSON.parse(row.fields) : row.fields,
+          scripts: row.scripts
+            ? typeof row.scripts === "string"
+              ? JSON.parse(row.scripts)
+              : row.scripts
+            : undefined,
+        };
+      } catch (err) {
+        console.warn("[Collect] Failed to parse dynamic form schema, using default:", err);
+      }
+    }
+    return DEFAULT_SCHEMA;
+  }, [schemaRows]);
+
+  const [photos, setPhotos] = useState<Array<{ uri: string; type: "stand" | "document" }>>([]);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [signature, setSignature] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const resetForm = useCallback(() => {
+    setPhotos([]);
+    setAudioUri(null);
+    setAudioDuration(0);
+    setSignature(null);
+    formRef.current?.reset?.();
+  }, []);
+
+  const handleFormSubmit = useCallback(
+    async (formData: Record<string, unknown>) => {
+      if (photos.length < 1) {
+        Alert.alert("Photo Required", "Please take at least one photo of the stand.");
+        return;
+      }
+
+      setSaving(true);
+      try {
+        const gps = await captureLocation();
+        const submissionId = uuid();
+        const now = new Date().toISOString();
+
+        const photosPayload = photos.map((p) => ({
+          key: "",
+          type: p.type,
+          timestamp: now,
+          local_path: p.uri,
+        }));
+
+        // Extract known fields; everything else goes into extra_fields
+        const knownFields = new Set([
+          "stand_number_official",
+          "stand_number_physical",
+          "respondent_type",
+          "respondent_name",
+          "respondent_phone",
+          "is_legal_owner",
+          "owner_name",
+          "owner_phone",
+          "account_standing",
+          "action_taken",
+          "field_notes",
+        ]);
+        const extraFields: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(formData)) {
+          if (!knownFields.has(key)) {
+            extraFields[key] = value;
+          }
+        }
+
+        const str = (v: unknown): string | null => (v == null ? null : String(v));
+        const boolToInt = (v: unknown): number => (v === true || v === 1 || v === "true" ? 1 : 0);
+
+        await db.writeTransaction(async (tx) => {
+          await tx.execute(
+            `INSERT INTO submissions (id, worker_id, form_schema_version, stand_number_official, stand_number_physical, respondent_type, respondent_name, respondent_phone, is_legal_owner, owner_name, owner_phone, account_standing, action_taken, field_notes, extra_fields, gps_latitude, gps_longitude, gps_accuracy, photos, audio_recording_key, audio_duration_seconds, signature_key, status, collected_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              submissionId,
+              user?.id || "",
+              DEFAULT_SCHEMA.version,
+              str(formData.stand_number_official),
+              str(formData.stand_number_physical),
+              str(formData.respondent_type),
+              str(formData.respondent_name),
+              str(formData.respondent_phone),
+              boolToInt(formData.is_legal_owner),
+              str(formData.owner_name),
+              str(formData.owner_phone),
+              str(formData.account_standing),
+              str(formData.action_taken),
+              str(formData.field_notes),
+              JSON.stringify(extraFields),
+              gps?.latitude ?? null,
+              gps?.longitude ?? null,
+              gps?.accuracy ?? null,
+              JSON.stringify(photosPayload),
+              audioUri ? "" : null,
+              audioDuration ? Math.floor(audioDuration / 1000) : null,
+              signature ? "" : null,
+              "pending",
+              now,
+            ],
+          );
+
+          // Queue photos for background upload
+          for (const photo of photos) {
+            await tx.execute(
+              `INSERT INTO media_queue (id, submission_id, file_path, file_type, file_size, upload_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [uuid(), submissionId, photo.uri, "photo", 0, "pending", now],
+            );
+          }
+
+          // Queue audio for background upload if present
+          if (audioUri) {
+            await tx.execute(
+              `INSERT INTO media_queue (id, submission_id, file_path, file_type, file_size, upload_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [uuid(), submissionId, audioUri, "audio", 0, "pending", now],
+            );
+          }
+
+          // Queue signature for background upload if present
+          if (signature) {
+            await tx.execute(
+              `INSERT INTO media_queue (id, submission_id, file_path, file_type, file_size, upload_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              [uuid(), submissionId, signature, "signature", 0, "pending", now],
+            );
+          }
+        });
+
+        Alert.alert("Saved!", "Record saved offline. It will sync when you have signal.", [
+          { text: "Collect Another", onPress: resetForm },
+          { text: "Done" },
+        ]);
+      } catch (error: any) {
+        Alert.alert("Error", error.message || "Failed to save record");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [photos, audioUri, audioDuration, signature, user, captureLocation, resetForm],
+  );
+
+  const handleSavePress = useCallback(() => {
+    // Delegate to react-hook-form's handleSubmit via the ref — this runs
+    // validation on all registered fields before calling handleFormSubmit.
+    formRef.current?.submit();
+  }, []);
+
+  return (
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+      <DynamicForm
+        ref={formRef}
+        schema={activeSchema}
+        onSubmit={handleFormSubmit}
+        defaultValues={{ is_legal_owner: true, account_standing: "Yes" }}
+      />
+
+      <View style={styles.mediaSection}>
+        <PhotoCapture photos={photos} onPhotosChange={setPhotos} minRequired={1} />
+
+        <AudioRecorder
+          onRecordingComplete={(uri, duration) => {
+            setAudioUri(uri);
+            setAudioDuration(duration);
+          }}
+        />
+
+        <SignaturePad onSignature={setSignature} />
+      </View>
+
+      <TouchableOpacity
+        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+        onPress={handleSavePress}
+        disabled={saving}
+      >
+        <Text style={styles.saveButtonText}>{saving ? "Saving..." : "Save Record Offline"}</Text>
+      </TouchableOpacity>
+
+      <View style={styles.bottomSpacer} />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  mediaSection: { paddingHorizontal: 16 },
+  saveButton: {
+    backgroundColor: "#1976D2",
+    margin: 16,
+    padding: 18,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  saveButtonDisabled: { opacity: 0.6 },
+  saveButtonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+  bottomSpacer: { height: 40 },
+});

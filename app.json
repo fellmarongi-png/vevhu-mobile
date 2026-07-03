@@ -1,0 +1,99 @@
+{
+  "expo": {
+    "name": "Vevhu Field",
+    "slug": "vevhu-field",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "vevhu-field",
+    "platforms": [
+      "android",
+      "web"
+    ],
+    "icon": "./assets/images/icon.png",
+    "android": {
+      "package": "com.vevhu.fieldworker",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.FOREGROUND_SERVICE_MICROPHONE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Vevhu Field to record visit conversations for verification.",
+          "enableBackgroundRecording": true,
+          "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Vevhu Field to take photos of stands and documents."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Vevhu Field to track your location for field verification.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Vevhu Field to access photos.",
+          "cameraPermission": "Allow Vevhu Field to take photos."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1a1a2e"
+        }
+      ],
+      "expo-asset",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/f93d507d-89fd-44e0-9fda-8a0ec8d80768"
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f93d507d-89fd-44e0-9fda-8a0ec8d80768"
+      }
+    },
+    "owner": "vevhu",
+    "ios": {}
+  }
+}

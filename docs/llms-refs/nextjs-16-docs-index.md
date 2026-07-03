@@ -1,0 +1,14 @@
+# Next.js 16.2.9 - Confirmed version and key features
+- App Router is default (NOT Pages Router)
+- use cache directive (NEW in v16)
+- use client / use server directives
+- Server Actions via 'use server'
+- File conventions: layout.tsx, page.tsx, loading.tsx, error.tsx, route.tsx
+- Middleware via middleware.ts at project root
+- Images: next/image component
+- Link: next/link component
+- Hooks: useRouter, usePathname, useSearchParams, useParams
+- Config: next.config.ts (TypeScript config supported)
+- Turbopack is default for dev
+- React 19 (Server Components default)
+- Key new: viewTransition, cacheComponents, authInterrupts, proxy.js

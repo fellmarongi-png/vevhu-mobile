@@ -1,0 +1,64 @@
+# PowerSync Sync Streams for Vevhu
+# Paste this into PowerSync dashboard > Sync Rules
+#
+# Uses Sync Streams (edition 3) — the recommended approach.
+# Key syntax notes:
+#   - auth.user_id() = authenticated user's ID from JWT
+#   - IN with literals: use IN ROW('a', 'b') not IN ('a', 'b')
+#   - JOIN must be INNER JOIN with simple equality conditions
+#   - OR is supported; each branch must be a valid filter
+
+config:
+  edition: 3
+
+streams:
+  # Global reference data — all authenticated users get this
+  known_stands:
+    auto_subscribe: true
+    query: SELECT * FROM known_stands
+
+  form_schemas:
+    auto_subscribe: true
+    query: SELECT * FROM form_schemas WHERE is_active = true
+
+  announcements:
+    auto_subscribe: true
+    query: SELECT * FROM announcements
+
+  # Worker-scoped data — each worker only sees their own
+  my_submissions:
+    auto_subscribe: true
+    query: SELECT * FROM submissions WHERE worker_id = auth.user_id()
+
+  my_shifts:
+    auto_subscribe: true
+    query: SELECT * FROM shifts WHERE worker_id = auth.user_id()
+
+  # Manager/admin streams — all data, filtered by role via JOIN
+  all_submissions:
+    auto_subscribe: true
+    query: |
+      SELECT submissions.* FROM submissions
+      INNER JOIN users ON users.id = auth.user_id()
+      WHERE users.role = 'manager' OR users.role = 'admin'
+
+  all_users:
+    auto_subscribe: true
+    query: |
+      SELECT users.* FROM users
+      INNER JOIN users AS auth_user ON auth_user.id = auth.user_id()
+      WHERE auth_user.role = 'manager' OR auth_user.role = 'admin'
+
+  all_shifts:
+    auto_subscribe: true
+    query: |
+      SELECT shifts.* FROM shifts
+      INNER JOIN users ON users.id = auth.user_id()
+      WHERE users.role = 'manager' OR users.role = 'admin'
+
+  daily_summaries:
+    auto_subscribe: true
+    query: |
+      SELECT daily_summaries.* FROM daily_summaries
+      INNER JOIN users ON users.id = auth.user_id()
+      WHERE users.role = 'manager' OR users.role = 'admin'
