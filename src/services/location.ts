@@ -13,15 +13,30 @@ export async function getCurrentPosition(): Promise<{
   const hasPermission = await requestLocationPermission();
   if (!hasPermission) return null;
 
-  const location = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.High,
-  });
+  try {
+    // 10-second timeout for high-accuracy GPS fix before falling back to last known position
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 10_000));
+    const locationPromise = Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
 
-  return {
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
-    accuracy: location.coords.accuracy ?? 0,
-  };
+    const result = await Promise.race([locationPromise, timeoutPromise]);
+    if (result && "coords" in result) {
+      return {
+        latitude: result.coords.latitude,
+        longitude: result.coords.longitude,
+        accuracy: result.coords.accuracy ?? 0,
+      };
+    }
+  } catch (err) {
+    console.warn(
+      "[Location] High accuracy GPS fix failed/timed out, trying last known position:",
+      err,
+    );
+  }
+
+  // Fallback to last known position if active GPS fix times out
+  return getLastKnownPosition();
 }
 
 export async function getLastKnownPosition(): Promise<{
@@ -29,12 +44,16 @@ export async function getLastKnownPosition(): Promise<{
   longitude: number;
   accuracy: number;
 } | null> {
-  const location = await Location.getLastKnownPositionAsync();
-  if (!location) return null;
+  try {
+    const location = await Location.getLastKnownPositionAsync();
+    if (!location) return null;
 
-  return {
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
-    accuracy: location.coords.accuracy ?? 0,
-  };
+    return {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      accuracy: location.coords.accuracy ?? 0,
+    };
+  } catch {
+    return null;
+  }
 }

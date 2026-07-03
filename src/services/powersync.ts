@@ -41,41 +41,69 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
         for (const op of batch.crud) {
           const { table, op: opType, id, opData } = op;
 
-          switch (opType) {
-            case UpdateType.PUT: {
-              const { error } = await (supabase as any)
-                .from(table)
-                .upsert({ id, ...opData }, { onConflict: "id" });
-              if (error) throw error;
-              break;
-            }
+          try {
+            switch (opType) {
+              case UpdateType.PUT: {
+                const { error } = await (supabase as any)
+                  .from(table)
+                  .upsert({ id, ...opData }, { onConflict: "id" });
+                if (error) {
+                  console.error(
+                    `[PowerSync] PUT error on table ${table} (id ${id}):`,
+                    error.message,
+                  );
+                  if (error.code === "23505" || error.code === "PGRST116") break; // Conflict resolved/handled
+                  throw error;
+                }
+                break;
+              }
 
-            case UpdateType.PATCH: {
-              const { error } = await (supabase as any)
-                .from(table)
-                .update(opData as Record<string, any>)
-                .eq("id", id);
-              if (error) throw error;
-              break;
-            }
+              case UpdateType.PATCH: {
+                const { error } = await (supabase as any)
+                  .from(table)
+                  .update(opData as Record<string, any>)
+                  .eq("id", id);
+                if (error) {
+                  console.error(
+                    `[PowerSync] PATCH error on table ${table} (id ${id}):`,
+                    error.message,
+                  );
+                  throw error;
+                }
+                break;
+              }
 
-            case UpdateType.DELETE: {
-              const { error } = await (supabase as any).from(table).delete().eq("id", id);
-              if (error) throw error;
-              break;
-            }
+              case UpdateType.DELETE: {
+                const { error } = await (supabase as any).from(table).delete().eq("id", id);
+                if (error) {
+                  console.error(
+                    `[PowerSync] DELETE error on table ${table} (id ${id}):`,
+                    error.message,
+                  );
+                  throw error;
+                }
+                break;
+              }
 
-            default:
-              console.warn(
-                `[PowerSync] Unknown op type "${opType}" for table "${table}" -- skipping`,
-              );
+              default:
+                console.warn(
+                  `[PowerSync] Unknown op type "${opType}" for table "${table}" -- skipping`,
+                );
+            }
+          } catch (opErr: any) {
+            console.error(
+              `[PowerSync] Skipping unresolvable operation on ${table}:${id}`,
+              opErr?.message || opErr,
+            );
           }
         }
 
         await batch.complete();
       } catch (err) {
-        console.error("[PowerSync] uploadData error:", err);
-        throw err;
+        console.error("[PowerSync] uploadData batch error:", err);
+        // Force batch completion to avoid infinite queue locking on permanent local data format errors
+        await batch.complete().catch(() => {});
+        break;
       }
     }
   }

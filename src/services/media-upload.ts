@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system";
+import { CONFIG } from "../config/app";
 import { supabase } from "./supabase";
 
 const BUCKET = "vevhu-media";
@@ -8,19 +9,31 @@ export async function uploadFile(
   storagePath: string,
   contentType: string,
 ): Promise<string> {
-  const fileContent = await FileSystem.readAsStringAsync(localPath, {
-    encoding: FileSystem.EncodingType.Base64,
+  // Get valid session access token
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token || CONFIG.SUPABASE_ANON_KEY;
+
+  const targetUrl = `${CONFIG.SUPABASE_URL}/storage/v1/object/${BUCKET}/${storagePath}`;
+
+  // Use FileSystem.uploadAsync for zero-JS-memory native file streaming
+  const response = await FileSystem.uploadAsync(targetUrl, localPath, {
+    httpMethod: "POST",
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      apikey: CONFIG.SUPABASE_ANON_KEY,
+      "Content-Type": contentType,
+      "x-upsert": "true",
+    },
   });
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .upload(storagePath, decode(fileContent), {
-      contentType,
-      upsert: true,
-    });
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(`Upload failed with status ${response.status}: ${response.body}`);
+  }
 
-  if (error) throw new Error(`Upload failed: ${error.message}`);
-  return data.path;
+  return storagePath;
 }
 
 export async function uploadSubmissionMedia(
@@ -47,13 +60,4 @@ export async function uploadSubmissionMedia(
 export function getPublicUrl(key: string): string {
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(key);
   return data.publicUrl;
-}
-
-function decode(base64: string): Uint8Array {
-  const binaryString = atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
 }
