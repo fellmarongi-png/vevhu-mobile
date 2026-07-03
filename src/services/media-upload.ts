@@ -1,4 +1,4 @@
-import * as FileSystem from "expo-file-system";
+import { FileSystemUploadType, uploadAsync } from "expo-file-system";
 import { CONFIG } from "../config/app";
 import { supabase } from "./supabase";
 
@@ -17,10 +17,10 @@ export async function uploadFile(
 
   const targetUrl = `${CONFIG.SUPABASE_URL}/storage/v1/object/${BUCKET}/${storagePath}`;
 
-  // Use FileSystem.uploadAsync for zero-JS-memory native file streaming
-  const response = await FileSystem.uploadAsync(targetUrl, localPath, {
+  // Use uploadAsync for zero-JS-memory native file streaming
+  const response = await uploadAsync(targetUrl, localPath, {
     httpMethod: "POST",
-    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    uploadType: FileSystemUploadType.BINARY_CONTENT,
     headers: {
       Authorization: `Bearer ${token}`,
       apikey: CONFIG.SUPABASE_ANON_KEY,
