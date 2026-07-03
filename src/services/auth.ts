@@ -1,5 +1,5 @@
-import * as SecureStore from "expo-secure-store";
 import { FunctionsHttpError } from "@supabase/supabase-js";
+import * as SecureStore from "expo-secure-store";
 import type { AuthSession } from "../types/user";
 import { supabase } from "./supabase";
 
@@ -13,13 +13,19 @@ export async function loginWithPin(name: string, pin: string): Promise<AuthSessi
   if (error) {
     const errorMsg = error.message || "";
     // Fallback for demo/offline when worker-auth Edge Function is not yet deployed on Supabase backend
-    if (errorMsg.includes("non-2xx") || errorMsg.includes("NOT_FOUND") || errorMsg.includes("404")) {
+    if (
+      errorMsg.includes("non-2xx") ||
+      errorMsg.includes("NOT_FOUND") ||
+      errorMsg.includes("404")
+    ) {
       const lowerName = name.trim().toLowerCase();
       if ((lowerName === "john doe" || lowerName === "tendai moyo") && pin.trim() === "1234") {
         const isJohn = lowerName === "john doe";
         const demoSession: AuthSession = {
           user: {
-            id: isJohn ? "a0000000-0000-0000-0000-000000000001" : "a0000000-0000-0000-0000-000000000002",
+            id: isJohn
+              ? "a0000000-0000-0000-0000-000000000001"
+              : "a0000000-0000-0000-0000-000000000002",
             full_name: isJohn ? "John Doe" : "Tendai Moyo",
             role: "worker",
             phone: "+263 77 123 4567",
@@ -55,10 +61,12 @@ export async function loginWithPin(name: string, pin: string): Promise<AuthSessi
   };
 
   if (session.token) {
-    await supabase.auth.setSession({
-      access_token: session.token,
-      refresh_token: data.refresh_token || session.token,
-    }).catch(() => {});
+    await supabase.auth
+      .setSession({
+        access_token: session.token,
+        refresh_token: data.refresh_token || session.token,
+      })
+      .catch(() => {});
   }
 
   await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
@@ -76,7 +84,10 @@ export async function getStoredSession(): Promise<AuthSession | null> {
   }
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
     if (error || !user) {
       // If server check fails in demo mode, keep local session
       if (session.token === "demo-local-jwt-token") {

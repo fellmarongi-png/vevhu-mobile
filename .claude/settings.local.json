@@ -1,12 +1,7 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(npx tsc *)",
-      "Bash(npx biome *)"
-    ]
+    "allow": ["Bash(npx tsc *)", "Bash(npx biome *)"]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "supabase"
-  ]
+  "enabledMcpjsonServers": ["supabase"]
 }

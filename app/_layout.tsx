@@ -3,7 +3,7 @@ import "react-native-url-polyfill/auto";
 import { PowerSyncContext } from "@powersync/react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { createContext, type ReactNode, useEffect, useState } from "react";
+import { createContext, type ReactNode, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { getStoredSession } from "../src/services/auth";
 import { db, setupPowerSync } from "../src/services/powersync";
@@ -45,7 +45,9 @@ function GlobalCrashOverlay({ children }: { children: ReactNode }) {
       <View style={styles.crashContainer}>
         <StatusBar style="light" />
         <Text style={styles.crashTitle}>⚠️ Startup Diagnostic Report</Text>
-        <Text style={styles.crashSubtitle}>An unhandled exception was intercepted before crash:</Text>
+        <Text style={styles.crashSubtitle}>
+          An unhandled exception was intercepted before crash:
+        </Text>
         <ScrollView style={styles.crashBox}>
           <Text style={styles.crashErrorText}>{fatalError.message || String(fatalError)}</Text>
           <Text style={styles.crashStack}>{fatalError.stack || "No stack trace available"}</Text>

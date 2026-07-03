@@ -37,7 +37,11 @@ export function SignaturePad({ onSignature }: SignaturePadProps) {
       {/* State 1: Signature already captured - Display Preview Thumbnail */}
       {signatureImage ? (
         <View style={styles.previewCard}>
-          <Image source={{ uri: signatureImage }} style={styles.previewImage} resizeMode="contain" />
+          <Image
+            source={{ uri: signatureImage }}
+            style={styles.previewImage}
+            resizeMode="contain"
+          />
           <View style={styles.previewActions}>
             <TouchableOpacity style={styles.resignBtn} onPress={() => setModalVisible(true)}>
               <Text style={styles.resignBtnText}>✍️ Re-sign</Text>
@@ -119,11 +123,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
-  previewImage: { height: 120, width: "100%", backgroundColor: "#fff", borderRadius: 8, marginBottom: 10 },
+  previewImage: {
+    height: 120,
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    marginBottom: 10,
+  },
   previewActions: { flexDirection: "row", gap: 10 },
-  resignBtn: { flex: 1, padding: 10, backgroundColor: "#1976D2", borderRadius: 6, alignItems: "center" },
+  resignBtn: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#1976D2",
+    borderRadius: 6,
+    alignItems: "center",
+  },
   resignBtnText: { color: "#fff", fontWeight: "600" },
-  removeBtn: { flex: 1, padding: 10, backgroundColor: "#ffebee", borderRadius: 6, alignItems: "center" },
+  removeBtn: {
+    flex: 1,
+    padding: 10,
+    backgroundColor: "#ffebee",
+    borderRadius: 6,
+    alignItems: "center",
+  },
   removeBtnText: { color: "#c62828", fontWeight: "600" },
 
   modalSafeArea: { flex: 1, backgroundColor: "#1a1a2e" },
@@ -148,10 +170,28 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: "center",
   },
-  clearBtn: { padding: 12, borderRadius: 8, backgroundColor: "#37474f", flex: 1, alignItems: "center" },
+  clearBtn: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#37474f",
+    flex: 1,
+    alignItems: "center",
+  },
   clearBtnText: { color: "#ffffff", fontWeight: "600" },
-  cancelBtn: { padding: 12, borderRadius: 8, backgroundColor: "#455a64", flex: 1, alignItems: "center" },
+  cancelBtn: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#455a64",
+    flex: 1,
+    alignItems: "center",
+  },
   cancelBtnText: { color: "#ffffff", fontWeight: "600" },
-  saveBtn: { padding: 12, borderRadius: 8, backgroundColor: "#2e7d32", flex: 2, alignItems: "center" },
+  saveBtn: {
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#2e7d32",
+    flex: 2,
+    alignItems: "center",
+  },
   saveBtnText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
 });

@@ -5,11 +5,11 @@
     "ignoreUnknown": true,
     "includes": [
       "**",
-      "!**/node_modules/**",
-      "!**/supabase/functions/**",
-      "!**/.expo/**",
-      "!**/android/**",
-      "!**/ios/**"
+      "!**/node_modules",
+      "!**/supabase/functions",
+      "!**/.expo",
+      "!**/android",
+      "!**/ios"
     ]
   },
   "formatter": {

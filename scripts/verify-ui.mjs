@@ -1,5 +1,5 @@
-import http from "node:http";
 import fs from "node:fs";
+import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -17,7 +17,7 @@ const MIME_TYPES = {
   ".jpg": "image/jpeg",
   ".json": "application/json",
   ".ttf": "font/ttf",
-  ".svg": "image/svg+xml"
+  ".svg": "image/svg+xml",
 };
 
 const server = http.createServer((req, res) => {
@@ -64,7 +64,7 @@ server.listen(PORT, async () => {
     const consoleLogs = [];
     const consoleErrors = [];
 
-    page.on("console", msg => {
+    page.on("console", (msg) => {
       if (msg.type() === "error") {
         consoleErrors.push(msg.text());
       } else {
@@ -72,7 +72,7 @@ server.listen(PORT, async () => {
       }
     });
 
-    page.on("pageerror", exception => {
+    page.on("pageerror", (exception) => {
       consoleErrors.push(`[Uncaught Exception] ${exception.stack || exception}`);
     });
 
@@ -102,11 +102,10 @@ server.listen(PORT, async () => {
 
     if (consoleErrors.length > 0) {
       console.log("\n[Verify] Console Errors encountered:");
-      consoleErrors.forEach(err => console.log("  ❌", err));
+      consoleErrors.forEach((err) => console.log("  ❌", err));
     } else {
       console.log("\n✅ ZERO Console Errors on app boot!");
     }
-
   } catch (err) {
     console.error("[Verify] Test execution error:", err);
   } finally {

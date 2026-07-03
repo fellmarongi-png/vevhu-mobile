@@ -48,3 +48,4 @@ Each skill has a `SKILL.md` — read it before executing related tasks.
 4. **`expo-secure-store` for all token storage** — never AsyncStorage
 5. **`supabase.auth.setSession()` must be called after login** for RLS to work
 6. **`app_metadata`** for roles/worker_id — never `user_metadata` (user-editable)
+7. **MANDATORY AUTO-PUSH & VERIFICATION RULE**: After ANY code or configuration changes, ALWAYS run Biome / linter and type checks (`npx @biomejs/biome check`, `npx tsc --noEmit`) to verify 100% accuracy, then immediately git commit and `git push` to GitHub (`fellmarongi-png/vevhu-mobile` / `fellmarongi-png/vevhu-dashboard`).

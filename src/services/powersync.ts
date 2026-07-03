@@ -1,10 +1,10 @@
+import { OPSqliteOpenFactory } from "@powersync/op-sqlite";
 import {
   type AbstractPowerSyncDatabase,
   type PowerSyncBackendConnector,
   PowerSyncDatabase,
   UpdateType,
 } from "@powersync/react-native";
-import { OPSqliteOpenFactory } from "@powersync/op-sqlite";
 import { CONFIG } from "../config/app";
 import { AppSchema } from "../db/powersync-schema";
 import { supabase } from "./supabase";
@@ -98,7 +98,7 @@ export function getPowerSyncDb(): PowerSyncDatabase {
 }
 
 export const db = new Proxy({} as PowerSyncDatabase, {
-  get(target, prop) {
+  get(_target, prop) {
     const instance = getPowerSyncDb();
     const val = (instance as any)[prop as string];
     if (typeof val === "function") {
@@ -106,7 +106,7 @@ export const db = new Proxy({} as PowerSyncDatabase, {
     }
     return val;
   },
-  set(target, prop, value) {
+  set(_target, prop, value) {
     const instance = getPowerSyncDb();
     (instance as any)[prop as string] = value;
     return true;

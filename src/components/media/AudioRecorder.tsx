@@ -1,6 +1,6 @@
+import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useVevhuAudioRecorder } from "../../hooks/useAudioRecorder";
 
 interface AudioRecorderProps {
@@ -99,7 +99,10 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
           </View>
 
           <View style={styles.actionRow}>
-            <TouchableOpacity style={[styles.controlBtn, styles.pauseBtn]} onPress={handlePauseResume}>
+            <TouchableOpacity
+              style={[styles.controlBtn, styles.pauseBtn]}
+              onPress={handlePauseResume}
+            >
               <Text style={styles.controlBtnText}>{isPaused ? "▶️ Resume" : "⏸️ Pause"}</Text>
             </TouchableOpacity>
 
@@ -114,7 +117,9 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
       {!isRecording && !isPaused && savedUri && (
         <View style={styles.savedCard}>
           <View style={styles.savedCardHeader}>
-            <Text style={styles.savedTitle}>✅ Audio Recorded ({formatDuration(savedDuration)})</Text>
+            <Text style={styles.savedTitle}>
+              ✅ Audio Recorded ({formatDuration(savedDuration)})
+            </Text>
           </View>
           <View style={styles.savedCardActions}>
             <TouchableOpacity style={styles.previewBtn} onPress={handleTogglePlay}>
@@ -140,9 +145,22 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { marginVertical: 16, padding: 16, backgroundColor: "#f8f9fa", borderRadius: 12, borderWidth: 1, borderColor: "#e0e0e0" },
+  container: {
+    marginVertical: 16,
+    padding: 16,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
   label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 12 },
-  activeRecordingBox: { backgroundColor: "#fff", padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#e3f2fd" },
+  activeRecordingBox: {
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e3f2fd",
+  },
   recordingIndicator: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   statusDot: { width: 12, height: 12, borderRadius: 6, marginRight: 8 },
   redDot: { backgroundColor: "#e53935" },
@@ -150,18 +168,44 @@ const styles = StyleSheet.create({
   timer: { fontSize: 20, fontWeight: "700", color: "#1a1a2e", marginRight: 8 },
   statusText: { fontSize: 14, fontWeight: "600", color: "#666" },
   actionRow: { flexDirection: "row", gap: 10 },
-  controlBtn: { flex: 1, padding: 12, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  controlBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   pauseBtn: { backgroundColor: "#f57c00" },
   stopBtn: { backgroundColor: "#e53935" },
   controlBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
 
-  savedCard: { backgroundColor: "#e8f5e9", padding: 14, borderRadius: 10, borderWidth: 1, borderColor: "#c8e6c9" },
+  savedCard: {
+    backgroundColor: "#e8f5e9",
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#c8e6c9",
+  },
   savedCardHeader: { marginBottom: 10 },
   savedTitle: { fontSize: 15, fontWeight: "700", color: "#2e7d32" },
   savedCardActions: { flexDirection: "row", gap: 10 },
-  previewBtn: { flex: 2, backgroundColor: "#2e7d32", padding: 10, borderRadius: 8, alignItems: "center" },
+  previewBtn: {
+    flex: 2,
+    backgroundColor: "#2e7d32",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
   previewBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  deleteBtn: { flex: 1, backgroundColor: "#ffebee", padding: 10, borderRadius: 8, alignItems: "center", borderWidth: 1, borderColor: "#ffcdd2" },
+  deleteBtn: {
+    flex: 1,
+    backgroundColor: "#ffebee",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ffcdd2",
+  },
   deleteBtnText: { color: "#c62828", fontSize: 14, fontWeight: "600" },
 
   startButton: { padding: 14, borderRadius: 8, backgroundColor: "#1976D2", alignItems: "center" },

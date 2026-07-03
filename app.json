@@ -5,10 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "vevhu-field",
-    "platforms": [
-      "android",
-      "web"
-    ],
+    "platforms": ["android", "web"],
     "icon": "./assets/images/icon.png",
     "android": {
       "package": "com.vevhu.fieldworker",

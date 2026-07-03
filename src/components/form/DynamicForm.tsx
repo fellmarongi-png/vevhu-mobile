@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import type { FormField as FormFieldType, FormSchema, TalkingScript } from "../../types/form";
 import { FormField } from "./FormField";
 import { ScriptBox } from "./ScriptBox";

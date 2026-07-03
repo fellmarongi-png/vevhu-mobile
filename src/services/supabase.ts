@@ -1,8 +1,8 @@
-import * as SecureStore from "expo-secure-store";
 import { createClient } from "@supabase/supabase-js";
+import * as SecureStore from "expo-secure-store";
 import { CONFIG } from "../config/app";
 
-const SESSION_STORAGE_KEY = "supabase.auth.token";
+const _SESSION_STORAGE_KEY = "supabase.auth.token";
 
 const ExpoSecureStoreAdapter = {
   getItem: (key: string) => SecureStore.getItemAsync(key),
@@ -27,7 +27,7 @@ function getSupabaseClient() {
 }
 
 export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
-  get(target, prop) {
+  get(_target, prop) {
     const client = getSupabaseClient();
     const val = (client as any)[prop as string];
     if (typeof val === "function") {
@@ -35,7 +35,7 @@ export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
     }
     return val;
   },
-  set(target, prop, value) {
+  set(_target, prop, value) {
     const client = getSupabaseClient();
     (client as any)[prop as string] = value;
     return true;

@@ -1,5 +1,6 @@
 import { useQuery } from "@powersync/react-native";
 import { format, formatISO, startOfDay, startOfWeek } from "date-fns";
+import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useContext, useState } from "react";
 import {
   FlatList,
@@ -13,7 +14,6 @@ import {
   View,
 } from "react-native";
 import { AuthContext } from "../_layout";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 
 interface SubmissionRow {
   id: string;
@@ -195,7 +195,9 @@ export default function ProgressScreen() {
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionRow | null>(null);
 
   const todayStart = formatISO(startOfDay(new Date()), { representation: "date" });
-  const weekStart = formatISO(startOfWeek(new Date(), { weekStartsOn: 1 }), { representation: "date" });
+  const weekStart = formatISO(startOfWeek(new Date(), { weekStartsOn: 1 }), {
+    representation: "date",
+  });
 
   // Summary Counts
   const { data: myToday } = useQuery<{ count: number }>(
@@ -298,7 +300,9 @@ export default function ProgressScreen() {
           <Text style={styles.statLabel}>My Today</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: "#2e7d32" }]}>{teamToday?.[0]?.count ?? 0}</Text>
+          <Text style={[styles.statNumber, { color: "#2e7d32" }]}>
+            {teamToday?.[0]?.count ?? 0}
+          </Text>
           <Text style={styles.statLabel}>Team Today</Text>
         </View>
         <View style={styles.statCard}>
@@ -369,7 +373,13 @@ const styles = StyleSheet.create({
   statNumber: { fontSize: 22, fontWeight: "700", color: "#1976D2" },
   statLabel: { fontSize: 12, color: "#666", marginTop: 2 },
 
-  tabRow: { flexDirection: "row", backgroundColor: "#e0e0e0", borderRadius: 10, padding: 4, marginBottom: 12 },
+  tabRow: {
+    flexDirection: "row",
+    backgroundColor: "#e0e0e0",
+    borderRadius: 10,
+    padding: 4,
+    marginBottom: 12,
+  },
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 8 },
   tabBtnActive: { backgroundColor: "#1976D2" },
   tabBtnText: { fontSize: 13, fontWeight: "600", color: "#555" },
@@ -395,7 +405,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
-  cardHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  cardHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
   standTitle: { fontSize: 16, fontWeight: "700", color: "#1a1a2e" },
   miniStatusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   syncedBg: { backgroundColor: "#e8f5e9" },
@@ -436,7 +451,12 @@ const styles = StyleSheet.create({
 
   modalContent: { padding: 16 },
   bannerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 14 },
-  badgeInfo: { backgroundColor: "#e3f2fd", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  badgeInfo: {
+    backgroundColor: "#e3f2fd",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
   badgeText: { fontSize: 13, fontWeight: "600", color: "#1976D2" },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   syncedBadge: { backgroundColor: "#e8f5e9" },
@@ -456,7 +476,14 @@ const styles = StyleSheet.create({
   infoLabel: { fontSize: 13, color: "#666" },
   infoValue: { fontSize: 13, fontWeight: "600", color: "#222" },
 
-  notesBox: { marginTop: 10, padding: 10, backgroundColor: "#fff", borderRadius: 8, borderWidth: 1, borderColor: "#e0e0e0" },
+  notesBox: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
   notesLabel: { fontSize: 12, fontWeight: "600", color: "#666", marginBottom: 2 },
   notesText: { fontSize: 13, color: "#333" },
 
@@ -466,5 +493,12 @@ const styles = StyleSheet.create({
   audioPlayBtn: { backgroundColor: "#2e7d32", padding: 12, borderRadius: 8, alignItems: "center" },
   audioPlayBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
 
-  signatureImage: { height: 100, width: "100%", backgroundColor: "#fff", borderRadius: 8, borderWidth: 1, borderColor: "#ddd" },
+  signatureImage: {
+    height: 100,
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
 });
