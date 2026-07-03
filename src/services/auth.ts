@@ -83,6 +83,15 @@ export async function getStoredSession(): Promise<AuthSession | null> {
     return null;
   }
 
+  if (session.token && session.token !== "demo-local-jwt-token") {
+    await supabase.auth
+      .setSession({
+        access_token: session.token,
+        refresh_token: session.token,
+      })
+      .catch(() => {});
+  }
+
   try {
     const {
       data: { user },

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Image, Modal, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SignatureCanvas from "react-native-signature-canvas";
 
 interface SignaturePadProps {
@@ -10,6 +11,7 @@ export function SignaturePad({ onSignature }: SignaturePadProps) {
   const ref = useRef<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [signatureImage, setSignatureImage] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
 
   const handleOK = (signature: string) => {
     setSignatureImage(signature);
@@ -58,9 +60,9 @@ export function SignaturePad({ onSignature }: SignaturePadProps) {
         </TouchableOpacity>
       )}
 
-      {/* State 3: Full-Screen Modal Signature Mode (Prevents screen fidgeting/scrolling) */}
+      {/* State 3: Full-Screen Modal Signature Mode (Prevents screen fidgeting/scrolling & respects safe areas) */}
       <Modal visible={modalVisible} animationType="slide" presentationStyle="fullScreen">
-        <SafeAreaView style={styles.modalSafeArea}>
+        <View style={[styles.modalSafeArea, { paddingTop: insets.top || 16 }]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Resident Signature</Text>
             <Text style={styles.modalSubtitle}>
@@ -81,7 +83,7 @@ export function SignaturePad({ onSignature }: SignaturePadProps) {
             />
           </View>
 
-          <View style={styles.modalFooter}>
+          <View style={[styles.modalFooter, { paddingBottom: (insets.bottom || 16) + 12 }]}>
             <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
               <Text style={styles.clearBtnText}>🧹 Clear</Text>
             </TouchableOpacity>
@@ -94,7 +96,7 @@ export function SignaturePad({ onSignature }: SignaturePadProps) {
               <Text style={styles.saveBtnText}>✅ Confirm & Save</Text>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
+        </View>
       </Modal>
     </View>
   );
@@ -149,7 +151,12 @@ const styles = StyleSheet.create({
   removeBtnText: { color: "#c62828", fontWeight: "600" },
 
   modalSafeArea: { flex: 1, backgroundColor: "#1a1a2e" },
-  modalHeader: { padding: 20, backgroundColor: "#1a1a2e" },
+  modalHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 16,
+    backgroundColor: "#1a1a2e",
+  },
   modalTitle: { fontSize: 20, fontWeight: "700", color: "#ffffff", marginBottom: 4 },
   modalSubtitle: { fontSize: 14, color: "#b0bec5" },
 
@@ -165,7 +172,8 @@ const styles = StyleSheet.create({
 
   modalFooter: {
     flexDirection: "row",
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     backgroundColor: "#1a1a2e",
     gap: 10,
     alignItems: "center",

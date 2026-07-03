@@ -6,13 +6,13 @@ import {
   FlatList,
   Image,
   Modal,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuthContext } from "../_layout";
 
 interface SubmissionRow {
@@ -48,6 +48,7 @@ function DetailModal({
   visible: boolean;
   onClose: () => void;
 }) {
+  const insets = useSafeAreaInsets();
   const player = useAudioPlayer(submission?.audio_recording_key || "");
   const playerStatus = useAudioPlayerStatus(player);
 
@@ -65,7 +66,12 @@ function DetailModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <SafeAreaView style={styles.modalContainer}>
+      <View
+        style={[
+          styles.modalContainer,
+          { paddingTop: insets.top || 12, paddingBottom: insets.bottom || 12 },
+        ]}
+      >
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>
             Stand #{submission.stand_number_official || submission.stand_number_physical || "N/A"}
@@ -182,13 +188,14 @@ function DetailModal({
             </View>
           )}
         />
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }
 
 export default function ProgressScreen() {
   const { session } = useContext(AuthContext);
+  const insets = useSafeAreaInsets();
   const userId = session?.user?.id ?? "";
   const [filterMode, setFilterMode] = useState<"my" | "team">("my");
   const [searchQuery, setSearchQuery] = useState("");
@@ -286,7 +293,7 @@ export default function ProgressScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top || 14 }]}>
       <DetailModal
         submission={selectedSubmission}
         visible={!!selectedSubmission}
@@ -347,7 +354,7 @@ export default function ProgressScreen() {
         data={filteredSubmissions}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: (insets.bottom || 20) + 20 }]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No submission records found.</Text>
@@ -359,7 +366,7 @@ export default function ProgressScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 14 },
+  container: { flex: 1, backgroundColor: "#f5f5f5", paddingHorizontal: 14 },
   statsRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
   statCard: {
     flex: 1,

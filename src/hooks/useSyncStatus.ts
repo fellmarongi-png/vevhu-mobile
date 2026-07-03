@@ -20,7 +20,7 @@ export interface SyncStatus {
   isSyncing: boolean;
 }
 
-const POLL_INTERVAL_MS = 5_000;
+const POLL_INTERVAL_MS = 15_000;
 
 const DEFAULT_STATUS: SyncStatus = {
   pendingSubmissions: 0,
