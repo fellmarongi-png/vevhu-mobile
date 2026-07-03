@@ -20,7 +20,7 @@ export async function uploadFile(
   // Use FileSystem.uploadAsync for zero-JS-memory native file streaming
   const response = await FileSystem.uploadAsync(targetUrl, localPath, {
     httpMethod: "POST",
-    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT as any,
+    uploadType: ((FileSystem as any).UploadType?.BINARY_CONTENT ?? 1) as any,
     headers: {
       Authorization: `Bearer ${token}`,
       apikey: CONFIG.SUPABASE_ANON_KEY,
