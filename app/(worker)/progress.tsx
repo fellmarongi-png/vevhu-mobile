@@ -155,7 +155,11 @@ function DetailModal({
                   <Text style={styles.cardHeader}>📷 Property Photos ({parsedPhotos.length})</Text>
                   <View style={styles.photoGrid}>
                     {parsedPhotos.map((photo, i) => (
-                      <Image key={photo.uri || `photo-${i}`} source={{ uri: photo.uri }} style={styles.photoThumb} />
+                      <Image
+                        key={photo.uri || `photo-${i}`}
+                        source={{ uri: photo.uri }}
+                        style={styles.photoThumb}
+                      />
                     ))}
                   </View>
                 </View>
