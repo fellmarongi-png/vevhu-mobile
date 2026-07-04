@@ -91,9 +91,7 @@
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/f93d507d-89fd-44e0-9fda-8a0ec8d80768"
     },
-    "runtimeVersion": {
-      "policy": "fingerprint"
-    },
+    "runtimeVersion": "1.0.0",
     "extra": {
       "router": {},
       "eas": {
