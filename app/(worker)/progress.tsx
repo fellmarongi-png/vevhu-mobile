@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { COLORS } from "../../src/config/app";
 import { AuthContext } from "../_layout";
 
 interface SubmissionRow {
@@ -154,7 +155,7 @@ function DetailModal({
                   <Text style={styles.cardHeader}>📷 Property Photos ({parsedPhotos.length})</Text>
                   <View style={styles.photoGrid}>
                     {parsedPhotos.map((photo, i) => (
-                      <Image key={i} source={{ uri: photo.uri }} style={styles.photoThumb} />
+                      <Image key={photo.uri || `photo-${i}`} source={{ uri: photo.uri }} style={styles.photoThumb} />
                     ))}
                   </View>
                 </View>
@@ -307,13 +308,15 @@ export default function ProgressScreen() {
           <Text style={styles.statLabel}>My Today</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: "#2e7d32" }]}>
+          <Text style={[styles.statNumber, { color: COLORS.success }]}>
             {teamToday?.[0]?.count ?? 0}
           </Text>
           <Text style={styles.statLabel}>Team Today</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: "#f57c00" }]}>{myWeek?.[0]?.count ?? 0}</Text>
+          <Text style={[styles.statNumber, { color: COLORS.warning }]}>
+            {myWeek?.[0]?.count ?? 0}
+          </Text>
           <Text style={styles.statLabel}>My This Week</Text>
         </View>
       </View>
@@ -366,51 +369,62 @@ export default function ProgressScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5", paddingHorizontal: 14 },
+  container: { flex: 1, backgroundColor: COLORS.background, paddingHorizontal: 14 },
   statsRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
   statCard: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.card,
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: COLORS.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  statNumber: { fontSize: 22, fontWeight: "700", color: "#1976D2" },
-  statLabel: { fontSize: 12, color: "#666", marginTop: 2 },
+  statNumber: { fontSize: 22, fontWeight: "700", color: COLORS.primary },
+  statLabel: { fontSize: 12, color: COLORS.mutedForeground, marginTop: 2 },
 
   tabRow: {
     flexDirection: "row",
-    backgroundColor: "#e0e0e0",
-    borderRadius: 10,
+    backgroundColor: COLORS.gray100,
+    borderRadius: 12,
     padding: 4,
     marginBottom: 12,
   },
   tabBtn: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 8 },
-  tabBtnActive: { backgroundColor: "#1976D2" },
-  tabBtnText: { fontSize: 13, fontWeight: "600", color: "#555" },
-  tabBtnTextActive: { color: "#fff" },
+  tabBtnActive: { backgroundColor: COLORS.primary },
+  tabBtnText: { fontSize: 13, fontWeight: "600", color: COLORS.gray600 },
+  tabBtnTextActive: { color: COLORS.white },
 
   searchContainer: { marginBottom: 12 },
   searchInput: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.card,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
     fontSize: 14,
+    color: COLORS.cardForeground,
   },
 
   listContent: { paddingBottom: 20 },
   recordCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: COLORS.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardHeaderRow: {
     flexDirection: "row",
@@ -418,94 +432,99 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 6,
   },
-  standTitle: { fontSize: 16, fontWeight: "700", color: "#1a1a2e" },
-  miniStatusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  syncedBg: { backgroundColor: "#e8f5e9" },
-  pendingBg: { backgroundColor: "#fff3e0" },
-  miniStatusText: { fontSize: 11, fontWeight: "600" },
+  standTitle: { fontSize: 16, fontWeight: "700", color: COLORS.cardForeground },
+  miniStatusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  syncedBg: { backgroundColor: COLORS.successBg },
+  pendingBg: { backgroundColor: COLORS.warningBg },
+  miniStatusText: { fontSize: 11, fontWeight: "600", color: COLORS.gray700 },
 
   cardDetails: { marginBottom: 8 },
-  detailText: { fontSize: 13, color: "#444", marginVertical: 2 },
-  collectorText: { fontSize: 12, color: "#666", marginTop: 4 },
-  boldText: { fontWeight: "700", color: "#222" },
+  detailText: { fontSize: 13, color: COLORS.gray600, marginVertical: 2 },
+  collectorText: { fontSize: 12, color: COLORS.mutedForeground, marginTop: 4 },
+  boldText: { fontWeight: "700", color: COLORS.cardForeground },
 
   mediaPillsRow: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
   mediaPill: {
-    backgroundColor: "#f0f4f8",
+    backgroundColor: COLORS.secondary,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingVertical: 4,
+    borderRadius: 8,
     fontSize: 11,
     fontWeight: "600",
-    color: "#1976D2",
+    color: COLORS.primaryDark,
   },
 
   emptyContainer: { padding: 40, alignItems: "center" },
-  emptyText: { color: "#888", fontSize: 14 },
+  emptyText: { color: COLORS.mutedForeground, fontSize: 14 },
 
-  modalContainer: { flex: 1, backgroundColor: "#fff" },
+  modalContainer: { flex: 1, backgroundColor: COLORS.card },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderColor: "#eee",
+    borderColor: COLORS.border,
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", color: "#1a1a2e" },
-  closeBtn: { padding: 8, backgroundColor: "#f5f5f5", borderRadius: 8 },
-  closeBtnText: { fontSize: 14, fontWeight: "600", color: "#666" },
+  modalTitle: { fontSize: 18, fontWeight: "700", color: COLORS.cardForeground },
+  closeBtn: { padding: 8, backgroundColor: COLORS.gray100, borderRadius: 8 },
+  closeBtnText: { fontSize: 14, fontWeight: "600", color: COLORS.gray600 },
 
   modalContent: { padding: 16 },
   bannerRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 14 },
   badgeInfo: {
-    backgroundColor: "#e3f2fd",
+    backgroundColor: COLORS.secondary,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
   },
-  badgeText: { fontSize: 13, fontWeight: "600", color: "#1976D2" },
+  badgeText: { fontSize: 13, fontWeight: "600", color: COLORS.primaryDark },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  syncedBadge: { backgroundColor: "#e8f5e9" },
-  pendingBadge: { backgroundColor: "#fff3e0" },
-  statusText: { fontSize: 13, fontWeight: "600" },
+  syncedBadge: { backgroundColor: COLORS.successBg },
+  pendingBadge: { backgroundColor: COLORS.warningBg },
+  statusText: { fontSize: 13, fontWeight: "600", color: COLORS.gray700 },
 
   detailCard: {
-    backgroundColor: "#f9f9f9",
+    backgroundColor: COLORS.gray50,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: COLORS.border,
   },
-  cardHeader: { fontSize: 14, fontWeight: "700", color: "#333", marginBottom: 10 },
+  cardHeader: { fontSize: 14, fontWeight: "700", color: COLORS.cardForeground, marginBottom: 10 },
   infoRow: { flexDirection: "row", justifyContent: "space-between", marginVertical: 3 },
-  infoLabel: { fontSize: 13, color: "#666" },
-  infoValue: { fontSize: 13, fontWeight: "600", color: "#222" },
+  infoLabel: { fontSize: 13, color: COLORS.mutedForeground },
+  infoValue: { fontSize: 13, fontWeight: "600", color: COLORS.cardForeground },
 
   notesBox: {
     marginTop: 10,
     padding: 10,
-    backgroundColor: "#fff",
-    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: COLORS.border,
   },
-  notesLabel: { fontSize: 12, fontWeight: "600", color: "#666", marginBottom: 2 },
-  notesText: { fontSize: 13, color: "#333" },
+  notesLabel: { fontSize: 12, fontWeight: "600", color: COLORS.mutedForeground, marginBottom: 2 },
+  notesText: { fontSize: 13, color: COLORS.cardForeground },
 
   photoGrid: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
-  photoThumb: { width: 90, height: 90, borderRadius: 8, backgroundColor: "#eee" },
+  photoThumb: { width: 90, height: 90, borderRadius: 10, backgroundColor: COLORS.gray100 },
 
-  audioPlayBtn: { backgroundColor: "#2e7d32", padding: 12, borderRadius: 8, alignItems: "center" },
-  audioPlayBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  audioPlayBtn: {
+    backgroundColor: COLORS.success,
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  audioPlayBtnText: { color: COLORS.white, fontSize: 14, fontWeight: "600" },
 
   signatureImage: {
     height: 100,
     width: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: COLORS.border,
   },
 });

@@ -47,5 +47,8 @@ Each skill has a `SKILL.md` — read it before executing related tasks.
 3. **`@powersync/op-sqlite` is the correct SQLite adapter** (New Architecture compatible)
 4. **`expo-secure-store` for all token storage** — never AsyncStorage
 5. **`supabase.auth.setSession()` must be called after login** for RLS to work
-6. **`app_metadata`** for roles/worker_id — never `user_metadata` (user-editable)
 7. **MANDATORY AUTO-PUSH & VERIFICATION RULE**: After ANY code or configuration changes, ALWAYS run Biome / linter and type checks (`npx @biomejs/biome check`, `npx tsc --noEmit`) to verify 100% accuracy, then immediately git commit and `git push` to GitHub (`fellmarongi-png/vevhu-mobile` / `fellmarongi-png/vevhu-dashboard`).
+8. **HIGH-PERFORMANCE LOCAL APK BUILD**: Use full system compute resources (48 workers, 16GB JVM RAM, 16GB Node RAM) to build APK locally, copy output APK to `vevhu-dashboard/public/downloads/vevhu-mobile-latest.apk`, and push to GitHub:
+   ```bash
+   GRADLE_OPTS="-Dorg.gradle.workers.max=48 -Dorg.gradle.parallel=true -Dorg.gradle.daemon=true -Dorg.gradle.jvmargs='-Xmx16g -XX:MaxMetaspaceSize=2048m'" NODE_OPTIONS="--max-old-space-size=16384" eas build --platform android --profile production --local --non-interactive
+   ```

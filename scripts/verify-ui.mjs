@@ -102,7 +102,9 @@ server.listen(PORT, async () => {
 
     if (consoleErrors.length > 0) {
       console.log("\n[Verify] Console Errors encountered:");
-      consoleErrors.forEach((err) => console.log("  ❌", err));
+      consoleErrors.forEach((err) => {
+        console.log("  ❌", err);
+      });
     } else {
       console.log("\n✅ ZERO Console Errors on app boot!");
     }

@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { createContext, type ReactNode, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { COLORS } from "../src/config/app";
 import { getStoredSession } from "../src/services/auth";
 import { db, setupPowerSync } from "../src/services/powersync";
 import type { AuthSession } from "../src/types/user";
@@ -21,7 +22,9 @@ if (typeof globalThis !== "undefined" && (globalThis as any).ErrorUtils) {
   (globalThis as any).ErrorUtils.setGlobalHandler((error: any, isFatal: boolean) => {
     console.error("[Global Crash Caught]:", error);
     globalFatalError = error instanceof Error ? error : new Error(String(error));
-    errorListeners.forEach((fn) => fn(globalFatalError!));
+    errorListeners.forEach((fn) => {
+      fn(globalFatalError!);
+    });
     if (originalHandler && !isFatal) {
       originalHandler(error, isFatal);
     }
@@ -146,48 +149,48 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   crashContainer: {
     flex: 1,
-    backgroundColor: "#1e1e24",
+    backgroundColor: COLORS.gray900,
     padding: 24,
     justifyContent: "center",
   },
   crashTitle: {
-    color: "#ff5555",
+    color: COLORS.error,
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 8,
     marginTop: 40,
   },
   crashSubtitle: {
-    color: "#cccccc",
+    color: COLORS.gray400,
     fontSize: 14,
     marginBottom: 16,
   },
   crashBox: {
-    backgroundColor: "#2a2a32",
-    borderRadius: 8,
+    backgroundColor: COLORS.gray800,
+    borderRadius: 12,
     padding: 16,
     maxHeight: 400,
     marginBottom: 20,
   },
   crashErrorText: {
-    color: "#ffb86c",
+    color: COLORS.warning,
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 12,
   },
   crashStack: {
-    color: "#8be9fd",
+    color: COLORS.primaryLight,
     fontSize: 12,
     fontFamily: "monospace",
   },
   retryBtn: {
-    backgroundColor: "#50fa7b",
+    backgroundColor: COLORS.success,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
   retryText: {
-    color: "#000000",
+    color: COLORS.white,
     fontWeight: "bold",
     fontSize: 16,
   },

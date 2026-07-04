@@ -75,7 +75,8 @@ src/
 ## Commands
 ```bash
 npx expo start --dev-client   # Development
-eas build --platform android --profile production --local  # Build APK
+GRADLE_OPTS="-Dorg.gradle.workers.max=48 -Dorg.gradle.parallel=true -Dorg.gradle.daemon=true -Dorg.gradle.jvmargs='-Xmx16g -XX:MaxMetaspaceSize=2048m'" NODE_OPTIONS="--max-old-space-size=16384" eas build --platform android --profile production --local --non-interactive  # High-performance local APK build
+cp build-*.apk ../vevhu-dashboard/public/downloads/vevhu-mobile-latest.apk  # Copy for web dashboard download
 eas update --branch production --message "desc"  # OTA update
 ```
 
