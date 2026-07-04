@@ -4,11 +4,15 @@
 // ---------------------------------------------------------------------------
 
 export const COLORS = {
-  // Brand primary (dashboard --primary)
-  primary: "#F59E0B",
-  primaryLight: "#FCD34D",
-  primaryDark: "#D97706",
+  // Exact Vevhu Brand Primary (Vibrant Orange #F3772D & Vevhu Blue #1976D2)
+  primary: "#F3772D",
+  primaryLight: "#FF9654",
+  primaryDark: "#D85D15",
   primaryForeground: "#FFFFFF",
+
+  // Brand Blue Accent
+  brandBlue: "#1976D2",
+  brandBlueDark: "#0475E0",
 
   // Secondary
   secondary: "#FEF3C7",
