@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>Collect - New Collection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary": "#ffffff",
+                      "inverse-primary": "#ffb691",
+                      "primary-container": "#f3772d",
+                      "surface-variant": "#f4ded5",
+                      "surface": "#fff8f6",
+                      "on-tertiary-fixed-variant": "#004c69",
+                      "brand-blue": "#1976D2",
+                      "tertiary": "#00668a",
+                      "tertiary-container": "#00a6df",
+                      "border": "#E7E5E4",
+                      "tertiary-fixed-dim": "#7bd0ff",
+                      "warning": "#F59E0B",
+                      "secondary-container": "#e8ded6",
+                      "primary-dark": "#D85D15",
+                      "primary-fixed-dim": "#ffb691",
+                      "on-primary": "#ffffff",
+                      "background": "#FAFAF9",
+                      "outline": "#8b7266",
+                      "outline-variant": "#dfc0b3",
+                      "primary-fixed": "#ffdbcb",
+                      "on-secondary-fixed": "#1f1b16",
+                      "on-error": "#ffffff",
+                      "card": "#FFFFFF",
+                      "on-tertiary-container": "#00374d",
+                      "on-surface-variant": "#574238",
+                      "on-secondary-fixed-variant": "#4c4640",
+                      "on-primary-fixed": "#341100",
+                      "on-primary-fixed-variant": "#793100",
+                      "surface-container-highest": "#f4ded5",
+                      "inverse-on-surface": "#ffede6",
+                      "on-primary-container": "#582200",
+                      "inverse-surface": "#3b2e27",
+                      "secondary": "#645d57",
+                      "on-tertiary-fixed": "#001e2c",
+                      "on-surface": "#241914",
+                      "primary-light": "#FF9654",
+                      "on-secondary-container": "#68615b",
+                      "surface-dim": "#ebd6cc",
+                      "surface-container-high": "#fae4da",
+                      "primary": "#9e4200",
+                      "surface-container-low": "#fff1eb",
+                      "on-error-container": "#93000a",
+                      "on-background": "#241914",
+                      "on-secondary": "#ffffff",
+                      "error": "#EF4444",
+                      "surface-container-lowest": "#ffffff",
+                      "success": "#22C55E",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#cfc5bd",
+                      "surface-container": "#ffeae1",
+                      "secondary-fixed": "#ebe1d9",
+                      "surface-bright": "#fff8f6",
+                      "brand-blue-dark": "#0475E0",
+                      "tertiary-fixed": "#c4e7ff",
+                      "surface-tint": "#9e4200"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-edge": "1rem",
+                      "touch-target-min": "48px",
+                      "tab-bar-height": "60px",
+                      "gutter": "0.75rem"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "title-sm": [
+                              "Inter"
+                      ],
+                      "label-bold": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-bold": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "title-sm": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-bold": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-bold": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+            },
+          }
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md antialiased h-screen flex flex-col overflow-hidden">
+<!-- Top Header -->
+<header class="bg-surface border-b border-outline-variant shadow-sm sticky top-0 w-full z-50">
+<!-- TopAppBar -->
+<div class="flex justify-between items-center px-margin-edge h-touch-target-min">
+<button class="w-touch-target-min h-touch-target-min flex items-center justify-start text-on-surface-variant hover:bg-surface-variant/50 transition-colors rounded-full -ml-2 active:opacity-80">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary truncate flex-1 text-center">New Collection</h1>
+<button class="w-touch-target-min h-touch-target-min flex items-center justify-end text-primary hover:bg-surface-variant/50 transition-colors rounded-full -mr-2 active:opacity-80">
+<span class="material-symbols-outlined">gps_fixed</span>
+</button>
+</div>
+<!-- Status Row -->
+<div class="px-margin-edge py-2 bg-surface-container flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-success"></div>
+<span>lat -17.783 lng 31.052</span>
+</div>
+<div class="text-primary font-label-bold text-label-bold">High Accuracy</div>
+</div>
+<!-- Progress Indicator -->
+<div class="px-margin-edge py-3 bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-1 font-label-sm text-label-sm text-secondary">
+<span>Progress</span>
+<span class="font-label-bold text-label-bold text-primary">Step 3 of 7</span>
+</div>
+<div class="w-full bg-surface-variant h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full" style="width: 42%;"></div>
+</div>
+</div>
+</header>
+<!-- Main Scrollable Content -->
+<main class="flex-1 overflow-y-auto bg-surface-container-lowest px-margin-edge py-6 pb-[160px]">
+<h2 class="font-title-sm text-title-sm text-primary mb-6 uppercase tracking-wide">Stand Details</h2>
+<form class="space-y-6">
+<!-- Floating Label Input: Stand Number Official -->
+<div class="relative">
+<input class="peer w-full h-14 bg-transparent text-on-background font-body-md border-b-2 border-outline-variant focus:border-primary placeholder-transparent focus:outline-none transition-colors pt-4" id="stand_official" placeholder="Stand Number Official" type="text"/>
+<label class="absolute left-0 top-1 text-on-surface-variant font-label-sm text-label-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-body-md peer-placeholder-shown:font-body-md peer-focus:top-1 peer-focus:text-label-sm peer-focus:font-label-sm peer-focus:text-primary pointer-events-none" for="stand_official">Stand Number Official</label>
+</div>
+<!-- Floating Label Input: Stand Number Physical -->
+<div class="relative">
+<input class="peer w-full h-14 bg-transparent text-on-background font-body-md border-b-2 border-outline-variant focus:border-primary placeholder-transparent focus:outline-none transition-colors pt-4" id="stand_physical" placeholder="Stand Number Physical" type="text"/>
+<label class="absolute left-0 top-1 text-on-surface-variant font-label-sm text-label-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-body-md peer-placeholder-shown:font-body-md peer-focus:top-1 peer-focus:text-label-sm peer-focus:font-label-sm peer-focus:text-primary pointer-events-none" for="stand_physical">Stand Number Physical</label>
+</div>
+<!-- Floating Label Input: Respondent Name -->
+<div class="relative">
+<input class="peer w-full h-14 bg-transparent text-on-background font-body-md border-b-2 border-outline-variant focus:border-primary placeholder-transparent focus:outline-none transition-colors pt-4" id="respondent_name" placeholder="Respondent Name" type="text"/>
+<label class="absolute left-0 top-1 text-on-surface-variant font-label-sm text-label-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-body-md peer-placeholder-shown:font-body-md peer-focus:top-1 peer-focus:text-label-sm peer-focus:font-label-sm peer-focus:text-primary pointer-events-none" for="respondent_name">Respondent Name</label>
+</div>
+<!-- Dropdown: Respondent Type -->
+<div class="relative">
+<label class="block text-primary font-label-sm text-label-sm mb-1" for="respondent_type">Respondent Type</label>
+<div class="relative">
+<select class="w-full h-14 bg-surface-variant rounded-lg px-4 appearance-none font-body-md text-on-background focus:outline-none focus:ring-2 focus:ring-primary border-none" id="respondent_type">
+<option disabled="" selected="" value="">Select type...</option>
+<option value="owner">Owner</option>
+<option value="tenant">Tenant</option>
+<option value="caretaker">Caretaker</option>
+<option value="other">Other</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Phone Number Input with Prefix -->
+<div>
+<label class="block text-on-surface-variant font-label-sm text-label-sm mb-1">Phone Number</label>
+<div class="flex">
+<button class="h-14 px-3 bg-surface-variant border-b-2 border-outline-variant flex items-center justify-center rounded-l-lg hover:bg-surface-container transition-colors focus:outline-none focus:border-primary" type="button">
+<span class="text-lg mr-1">🇿🇼</span>
+<span class="font-body-md text-on-background">+263</span>
+</button>
+<input class="w-full h-14 bg-transparent text-on-background font-body-md border-b-2 border-outline-variant focus:border-primary placeholder-outline focus:outline-none transition-colors px-4 rounded-r-lg" placeholder="Phone Number" type="tel"/>
+</div>
+</div>
+<!-- Is Legal Owner Toggle -->
+<div class="flex items-center justify-between py-2 border-b border-outline-variant">
+<span class="font-body-md text-on-background">Is Legal Owner</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-16 h-8 bg-surface-variant rounded-full peer peer-focus:ring-2 peer-focus:ring-primary-light peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-outline after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary-container"></div>
+<span class="absolute right-2 text-[10px] font-bold text-on-primary pointer-events-none peer-checked:opacity-100 opacity-0 transition-opacity">YES</span>
+<span class="absolute left-3 text-[10px] font-bold text-on-surface-variant pointer-events-none peer-checked:opacity-0 opacity-100 transition-opacity">NO</span>
+</label>
+</div>
+<!-- Optional Attachment hint -->
+<div class="bg-surface-container-high rounded-lg p-4 mt-8">
+<p class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">info</span>
+                     Ensure media is captured before proceeding.
+                 </p>
+</div>
+</form>
+</main>
+<!-- Fixed Bottom Action Bar (Contextual FAB/Actions, NOT Nav Shell) -->
+<div class="fixed bottom-0 w-full bg-surface-container-lowest border-t border-border shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 pb-[env(safe-area-inset-bottom)]">
+<div class="px-margin-edge py-4">
+<div class="flex gap-3 mb-4">
+<!-- Photo Button -->
+<button class="flex-1 h-touch-target-min bg-brand-blue/10 text-brand-blue rounded-lg flex items-center justify-center gap-2 font-body-bold text-body-bold active:scale-95 transition-transform">
+<span class="material-symbols-outlined">photo_camera</span>
+                    Photo
+                </button>
+<!-- Audio Button -->
+<button class="flex-1 h-touch-target-min bg-error/10 text-error rounded-lg flex items-center justify-center gap-2 font-body-bold text-body-bold active:scale-95 transition-transform">
+<span class="material-symbols-outlined">mic</span>
+                    Audio 0:00
+                </button>
+</div>
+<!-- Next Section Button -->
+<button class="w-full h-touch-target-min bg-primary-container text-on-primary rounded-full flex items-center justify-center gap-2 font-title-sm text-title-sm active:opacity-80 transition-opacity shadow-md">
+                Next Section
+                <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</body></html>

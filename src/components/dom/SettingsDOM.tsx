@@ -1,0 +1,301 @@
+"use dom";
+
+import { useEffect, useRef } from "react";
+
+interface Props {
+  onNavigate?: (route: string) => void;
+  onAction?: (actionType: string, payload?: any) => void;
+  data?: any;
+  dom?: import("expo/dom").DOMProps;
+}
+
+export default function SettingsDOM({ onNavigate, onAction, data }: Props) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const rawHtml = `<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Settings - Vevhu Resources</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-dim": "#ebd6cc",
+                        "secondary-container": "#e8ded6",
+                        "surface": "#fff8f6",
+                        "secondary-fixed": "#ebe1d9",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "primary-light": "#FF9654",
+                        "tertiary-fixed-dim": "#7bd0ff",
+                        "on-surface": "#241914",
+                        "on-secondary-container": "#68615b",
+                        "surface-container-high": "#fae4da",
+                        "tertiary-container": "#00a6df",
+                        "on-primary-container": "#582200",
+                        "warning": "#F59E0B",
+                        "secondary-fixed-dim": "#cfc5bd",
+                        "tertiary": "#00668a",
+                        "surface-tint": "#9e4200",
+                        "success": "#22C55E",
+                        "background": "#FAFAF9",
+                        "surface-container-highest": "#f4ded5",
+                        "on-surface-variant": "#574238",
+                        "primary-fixed-dim": "#ffb691",
+                        "on-error": "#ffffff",
+                        "outline": "#8b7266",
+                        "border": "#E7E5E4",
+                        "inverse-primary": "#ffb691",
+                        "card": "#FFFFFF",
+                        "primary-fixed": "#ffdbcb",
+                        "inverse-surface": "#3b2e27",
+                        "inverse-on-surface": "#ffede6",
+                        "on-tertiary-container": "#00374d",
+                        "on-tertiary-fixed": "#001e2c",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "secondary": "#645d57",
+                        "tertiary-fixed": "#c4e7ff",
+                        "on-secondary-fixed": "#1f1b16",
+                        "primary-container": "#f3772d",
+                        "surface-variant": "#f4ded5",
+                        "on-primary-fixed": "#341100",
+                        "on-secondary-fixed-variant": "#4c4640",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#004c69",
+                        "on-background": "#241914",
+                        "primary-dark": "#D85D15",
+                        "outline-variant": "#dfc0b3",
+                        "error": "#EF4444",
+                        "primary": "#9e4200",
+                        "surface-bright": "#fff8f6",
+                        "brand-blue-dark": "#0475E0",
+                        "surface-container-low": "#fff1eb",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#ffeae1",
+                        "on-primary-fixed-variant": "#793100",
+                        "brand-blue": "#1976D2"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "gutter": "0.75rem",
+                        "tab-bar-height": "60px",
+                        "touch-target-min": "48px",
+                        "margin-edge": "1rem"
+                    },
+                    fontFamily: {
+                        "label-bold": ["Inter", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "title-sm": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "body-bold": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"]
+                    },
+                    fontSize: {
+                        "label-bold": ["12px", { lineHeight: "16px", fontWeight: "700" }],
+                        "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+                        "headline-md": ["20px", { lineHeight: "28px", fontWeight: "700" }],
+                        "title-sm": ["16px", { lineHeight: "24px", fontWeight: "600" }],
+                        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                        "body-bold": ["14px", { lineHeight: "20px", fontWeight: "700" }],
+                        "headline-lg": ["24px", { lineHeight: "32px", fontWeight: "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-sans pb-[calc(60px+env(safe-area-inset-bottom))]">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center w-full px-margin-edge h-16 bg-surface dark:bg-on-surface-variant text-primary dark:text-primary-fixed font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed docked full-width top-0 border-b border-outline-variant dark:border-outline flat no shadows">
+<button class="flex items-center justify-center min-w-[48px] min-h-[48px] active:scale-95 transition-transform hover:bg-surface-container-low dark:hover:bg-surface-container-highest rounded-full">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="flex-1 text-center font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed mr-12">Settings</h1>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 mt-16 px-margin-edge py-gutter space-y-4">
+<!-- Worker Profile Card -->
+<section class="bg-card rounded-lg shadow-sm border border-outline-variant p-4 flex items-center space-x-4">
+<div class="w-16 h-16 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-headline-lg text-headline-lg shrink-0">
+                TM
+            </div>
+<div class="flex-1">
+<h2 class="font-title-sm text-title-sm text-on-surface">Tendai Moyo</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">ID: EMP-0047</p>
+<div class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-surface-container text-primary-dark font-label-bold text-label-bold">
+                    Field Collector
+                </div>
+</div>
+</section>
+<!-- Sync Status Section -->
+<section class="bg-card rounded-lg shadow-sm border border-outline-variant p-4 space-y-4">
+<div class="flex justify-between items-center border-l-2 border-primary pl-2">
+<h3 class="font-title-sm text-title-sm text-on-surface">Sync Status</h3>
+<div class="flex items-center space-x-1 text-success font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]" data-icon="check_circle">check_circle</span>
+<span>Connected</span>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-on-surface-variant font-label-sm text-label-sm mb-1">
+<span>Data synced</span>
+<span>100%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2">
+<div class="bg-primary-container h-2 rounded-full" style="width: 100%"></div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 text-right">Last synced: 2 minutes ago</p>
+</div>
+<button class="w-full min-h-[48px] flex items-center justify-center border-2 border-brand-blue text-brand-blue rounded-lg font-body-bold text-body-bold active:scale-95 transition-transform hover:bg-brand-blue hover:text-white">
+<span class="material-symbols-outlined mr-2" data-icon="sync">sync</span>
+                Force Sync
+            </button>
+</section>
+<!-- Media Queue Section -->
+<section class="bg-card rounded-lg shadow-sm border border-outline-variant p-4 space-y-4">
+<div class="border-l-2 border-primary pl-2">
+<h3 class="font-title-sm text-title-sm text-on-surface">Media Queue</h3>
+</div>
+<div class="flex items-center space-x-3 bg-surface-container-lowest border border-border rounded-lg p-3">
+<div class="w-12 h-12 rounded bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="photo_library">photo_library</span>
+</div>
+<div class="flex-1">
+<p class="font-body-bold text-body-bold text-on-surface">5 photos pending upload</p>
+<div class="w-full bg-surface-container-highest rounded-full h-1 mt-2">
+<div class="bg-warning h-1 rounded-full w-1/3"></div>
+</div>
+</div>
+</div>
+<button class="w-full min-h-[48px] flex items-center justify-center text-primary-dark font-body-bold text-body-bold active:opacity-80 transition-opacity">
+                Clear Cached Media
+            </button>
+</section>
+<!-- App Info Section -->
+<section class="bg-card rounded-lg shadow-sm border border-outline-variant p-4 space-y-2">
+<div class="border-l-2 border-primary pl-2 mb-2">
+<h3 class="font-title-sm text-title-sm text-on-surface">App Info</h3>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-border">
+<span class="font-body-md text-body-md text-on-surface-variant">Version</span>
+<span class="font-body-bold text-body-bold text-on-surface">1.2.0</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="font-body-md text-body-md text-on-surface-variant">Storage Used</span>
+<span class="font-body-bold text-body-bold text-on-surface">48MB</span>
+</div>
+</section>
+<!-- Logout Section -->
+<section class="pt-6 pb-4 flex flex-col items-center">
+<button class="w-full min-h-[48px] flex items-center justify-center border-2 border-error text-error rounded-lg font-body-bold text-body-bold active:scale-95 transition-transform hover:bg-error hover:text-white">
+                Logout
+            </button>
+<p class="mt-2 font-label-sm text-label-sm text-error text-center">Unsaved data may be lost on logout</p>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 h-[60px] bg-surface dark:bg-on-surface-variant border-t border-border dark:border-outline shadow-md flex justify-around items-center pb-[env(safe-area-inset-bottom)]">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant h-full w-full hover:bg-surface-container-low dark:hover:bg-surface-container-highest active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mb-1" data-icon="description">description</span>
+<span class="font-label-bold text-label-bold">Records</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant h-full w-full hover:bg-surface-container-low dark:hover:bg-surface-container-highest active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mb-1" data-icon="map">map</span>
+<span class="font-label-bold text-label-bold">Map</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant h-full w-full hover:bg-surface-container-low dark:hover:bg-surface-container-highest active:opacity-80 transition-opacity">
+<span class="material-symbols-outlined mb-1" data-icon="sync">sync</span>
+<span class="font-label-bold text-label-bold">Sync</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed border-t-2 border-primary dark:border-primary-fixed h-full w-full bg-surface dark:bg-on-surface-variant">
+<span class="material-symbols-outlined mb-1" data-icon="settings" data-weight="fill">settings</span>
+<span class="font-label-bold text-label-bold">Settings</span>
+</button>
+</nav>
+<!-- Desktop SideNav (Hidden on Mobile) -->
+<nav class="hidden md:flex flex-col fixed top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-surface dark:bg-on-surface-variant border-r border-border dark:border-outline py-4 px-2">
+<div class="space-y-2">
+<button class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low active:opacity-80 transition-all min-h-[48px]">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-title-sm text-title-sm">Records</span>
+</button>
+<button class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low active:opacity-80 transition-all min-h-[48px]">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span class="font-title-sm text-title-sm">Map</span>
+</button>
+<button class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low active:opacity-80 transition-all min-h-[48px]">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+<span class="font-title-sm text-title-sm">Sync</span>
+</button>
+<button class="flex items-center space-x-3 w-full px-4 py-3 rounded-lg bg-surface-container-high text-primary font-bold active:opacity-80 transition-all min-h-[48px]">
+<span class="material-symbols-outlined" data-icon="settings" data-weight="fill">settings</span>
+<span class="font-title-sm text-title-sm">Settings</span>
+</button>
+</div>
+</nav>
+</body></html>`;
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === "navigate" && onNavigate) {
+          onNavigate(msg.route);
+        } else if (msg.type === "action" && onAction) {
+          onAction(msg.actionType, msg.payload);
+        }
+      } catch (_e) {}
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [onNavigate, onAction]);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        position: "relative",
+        backgroundColor: "#FAFAF9",
+      }}
+    >
+      <iframe
+        ref={iframeRef}
+        srcDoc={rawHtml}
+        style={{
+          width: "100%",
+          height: "100%",
+          border: "none",
+          display: "block",
+        }}
+        title="settings screen"
+      />
+    </div>
+  );
+}
