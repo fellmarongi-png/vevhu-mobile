@@ -1,8 +1,12 @@
 import { Tabs } from "expo-router";
 import { Text } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../src/config/app";
 
 export default function WorkerLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomInset = insets.bottom > 0 ? insets.bottom : 8;
+
   return (
     <Tabs
       screenOptions={{
@@ -19,9 +23,9 @@ export default function WorkerLayout() {
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.gray400,
         tabBarStyle: {
-          paddingBottom: 4,
-          paddingTop: 4,
-          height: 60,
+          paddingBottom: bottomInset,
+          paddingTop: 6,
+          height: 60 + bottomInset,
           backgroundColor: COLORS.card,
           borderTopColor: COLORS.border,
           borderTopWidth: 1,
@@ -29,7 +33,7 @@ export default function WorkerLayout() {
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.05,
           shadowRadius: 4,
-          elevation: 4,
+          elevation: 8,
         },
         tabBarItemStyle: {
           paddingVertical: 2,

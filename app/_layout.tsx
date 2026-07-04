@@ -126,22 +126,26 @@ function PowerSyncProvider({ children }: { children: ReactNode }) {
 
 export { ErrorBoundary } from "expo-router";
 
+import { SafeAreaProvider } from "react-native-safe-area-context";
+
 export default function RootLayout() {
   return (
-    <GlobalCrashOverlay>
-      <PowerSyncProvider>
-        <AuthProvider>
-          <View style={styles.container}>
-            <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="index" />
-              <Stack.Screen name="login" />
-              <Stack.Screen name="(worker)" />
-            </Stack>
-          </View>
-        </AuthProvider>
-      </PowerSyncProvider>
-    </GlobalCrashOverlay>
+    <SafeAreaProvider>
+      <GlobalCrashOverlay>
+        <PowerSyncProvider>
+          <AuthProvider>
+            <View style={styles.container}>
+              <StatusBar style="dark" />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="login" />
+                <Stack.Screen name="(worker)" />
+              </Stack>
+            </View>
+          </AuthProvider>
+        </PowerSyncProvider>
+      </GlobalCrashOverlay>
+    </SafeAreaProvider>
   );
 }
 

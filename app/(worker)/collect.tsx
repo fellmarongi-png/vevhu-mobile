@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { v4 as uuid } from "uuid";
 import { DynamicForm, type DynamicFormRef } from "../../src/components/form/DynamicForm";
 import { AudioRecorder } from "../../src/components/media/AudioRecorder";
@@ -330,7 +331,7 @@ export default function CollectScreen() {
         <Text style={styles.saveButtonText}>{saving ? "Saving..." : "Save Record Offline"}</Text>
       </TouchableOpacity>
 
-      <View style={styles.bottomSpacer} />
+      <View style={{ height: (useSafeAreaInsets().bottom || 16) + 50 }} />
     </ScrollView>
   );
 }
