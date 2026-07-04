@@ -5,6 +5,7 @@ import { DynamicForm, type DynamicFormRef } from "../../src/components/form/Dyna
 import { AudioRecorder } from "../../src/components/media/AudioRecorder";
 import { PhotoCapture } from "../../src/components/media/PhotoCapture";
 import { SignaturePad } from "../../src/components/media/SignaturePad";
+import { COLORS } from "../../src/config/app";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useLocation } from "../../src/hooks/useLocation";
 import { useWatchedQuery } from "../../src/hooks/usePowerSync";
@@ -335,16 +336,21 @@ export default function CollectScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   mediaSection: { paddingHorizontal: 16 },
   saveButton: {
-    backgroundColor: "#1976D2",
+    backgroundColor: COLORS.primary,
     margin: 16,
-    padding: 18,
-    borderRadius: 12,
+    paddingVertical: 18,
+    borderRadius: 14,
     alignItems: "center",
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   saveButtonDisabled: { opacity: 0.6 },
-  saveButtonText: { color: "#fff", fontSize: 18, fontWeight: "700" },
+  saveButtonText: { color: COLORS.primaryForeground, fontSize: 18, fontWeight: "700" },
   bottomSpacer: { height: 40 },
 });

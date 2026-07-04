@@ -2,6 +2,7 @@ import { useQuery } from "@powersync/react-native";
 import { formatDistanceToNow } from "date-fns";
 import { useCallback, useContext } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { COLORS } from "../../src/config/app";
 import { db } from "../../src/services/powersync";
 import { AuthContext } from "../_layout";
 
@@ -140,7 +141,7 @@ export default function AnnouncementsScreen() {
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: COLORS.background },
 
   header: {
     flexDirection: "row",
@@ -149,34 +150,36 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     gap: 10,
   },
-  title: { fontSize: 22, fontWeight: "700", color: "#333" },
+  title: { fontSize: 22, fontWeight: "700", color: COLORS.cardForeground },
   badge: {
-    backgroundColor: "#1976D2",
+    backgroundColor: COLORS.primary,
     borderRadius: 12,
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
-  badgeText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+  badgeText: { color: COLORS.primaryForeground, fontSize: 12, fontWeight: "600" },
 
   list: { padding: 16, paddingTop: 8 },
 
   empty: { flex: 1, justifyContent: "center", alignItems: "center" },
-  emptyText: { fontSize: 16, color: "#999" },
+  emptyText: { fontSize: 16, color: COLORS.mutedForeground },
 
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
     padding: 16,
     marginBottom: 12,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
   cardUnread: {
     borderLeftWidth: 4,
-    borderLeftColor: "#1976D2",
+    borderLeftColor: COLORS.primary,
   },
   unreadDot: {
     position: "absolute",
@@ -185,11 +188,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#1976D2",
+    backgroundColor: COLORS.primary,
   },
-  cardTitle: { fontSize: 16, fontWeight: "500", color: "#444", marginRight: 16 },
-  cardTitleUnread: { fontWeight: "700", color: "#1a1a1a" },
-  cardMessage: { fontSize: 14, color: "#666", marginTop: 6, lineHeight: 20 },
-  cardDate: { fontSize: 12, color: "#999", marginTop: 8 },
-  tapHint: { fontSize: 11, color: "#1976D2", marginTop: 6, fontStyle: "italic" },
+  cardTitle: { fontSize: 16, fontWeight: "500", color: COLORS.gray700, marginRight: 16 },
+  cardTitleUnread: { fontWeight: "700", color: COLORS.cardForeground },
+  cardMessage: { fontSize: 14, color: COLORS.gray600, marginTop: 6, lineHeight: 20 },
+  cardDate: { fontSize: 12, color: COLORS.mutedForeground, marginTop: 8 },
+  tapHint: { fontSize: 11, color: COLORS.primary, marginTop: 6, fontStyle: "italic" },
 });

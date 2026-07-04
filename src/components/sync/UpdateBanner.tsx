@@ -1,6 +1,7 @@
 import * as Updates from "expo-updates";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { COLORS } from "../../config/app";
 
 export function UpdateBanner() {
   const { currentlyRunning, isUpdateAvailable, isUpdatePending, isChecking, isDownloading } =
@@ -75,12 +76,12 @@ export function UpdateBanner() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: COLORS.secondary,
     borderRadius: 12,
     padding: 12,
     marginVertical: 12,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.15)",
+    borderColor: COLORS.primaryLight,
   },
   infoRow: {
     flexDirection: "row",
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   versionText: {
-    color: "#ccc",
+    color: COLORS.gray600,
     fontSize: 12,
     fontWeight: "500",
   },
@@ -97,38 +98,38 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   restartButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: COLORS.success,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
   restartButtonText: {
-    color: "#fff",
+    color: COLORS.white,
     fontSize: 13,
     fontWeight: "700",
   },
   updateButton: {
-    backgroundColor: "#FF9800",
+    backgroundColor: COLORS.warning,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
   updateButtonText: {
-    color: "#fff",
+    color: COLORS.white,
     fontSize: 13,
     fontWeight: "700",
   },
   checkButton: {
-    backgroundColor: "rgba(25, 118, 210, 0.4)",
+    backgroundColor: COLORS.primary,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 6,
+    borderRadius: 8,
     alignItems: "center",
   },
   checkButtonText: {
-    color: "#64B5F6",
+    color: COLORS.primaryForeground,
     fontSize: 12,
     fontWeight: "600",
   },

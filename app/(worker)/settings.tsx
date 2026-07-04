@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useCallback, useContext, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { UpdateBanner } from "../../src/components/sync/UpdateBanner";
+import { COLORS } from "../../src/config/app";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useSyncStatus } from "../../src/hooks/useSyncStatus";
 import { db } from "../../src/services/powersync";
@@ -227,12 +228,18 @@ const rowStyles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#eee",
+    borderBottomColor: COLORS.border,
   },
-  label: { fontSize: 14, color: "#777" },
-  value: { fontSize: 14, color: "#333", fontWeight: "500", flexShrink: 1, textAlign: "right" },
+  label: { fontSize: 14, color: COLORS.mutedForeground },
+  value: {
+    fontSize: 14,
+    color: COLORS.cardForeground,
+    fontWeight: "500",
+    flexShrink: 1,
+    textAlign: "right",
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -240,68 +247,81 @@ const rowStyles = StyleSheet.create({
 // ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: "700", color: "#333", marginBottom: 20 },
+  title: { fontSize: 22, fontWeight: "700", color: COLORS.cardForeground, marginBottom: 20 },
 
   section: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
     padding: 16,
     marginBottom: 16,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
-    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
   sectionTitle: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#888",
+    color: COLORS.mutedForeground,
     letterSpacing: 1,
     marginBottom: 10,
   },
-  hint: { fontSize: 13, color: "#888", marginBottom: 12, lineHeight: 18 },
+  hint: { fontSize: 13, color: COLORS.mutedForeground, marginBottom: 12, lineHeight: 18 },
   syncingLabel: {
     fontSize: 12,
-    color: "#1976D2",
+    color: COLORS.primary,
     marginTop: 6,
     fontStyle: "italic",
   },
 
-  online: { color: "#388E3C" },
-  offline: { color: "#e53935" },
-  warning: { color: "#F57C00" },
+  online: { color: COLORS.success },
+  offline: { color: COLORS.error },
+  warning: { color: COLORS.warning },
 
   syncButton: {
-    backgroundColor: "#1976D2",
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
     alignItems: "center",
     marginTop: 14,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  syncButtonText: { color: "#fff", fontWeight: "600" },
+  syncButtonText: { color: COLORS.primaryForeground, fontWeight: "600" },
 
   clearButton: {
-    padding: 12,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.gray50,
   },
-  clearButtonText: { color: "#666", fontWeight: "600" },
+  clearButtonText: { color: COLORS.gray700, fontWeight: "600" },
 
   buttonDisabled: { opacity: 0.5 },
 
   logoutButton: {
-    backgroundColor: "#e53935",
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: COLORS.error,
+    paddingVertical: 16,
+    borderRadius: 10,
     alignItems: "center",
     marginTop: 8,
+    shadowColor: COLORS.error,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  logoutButtonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  logoutButtonText: { color: COLORS.white, fontSize: 16, fontWeight: "700" },
 
-  version: { textAlign: "center", color: "#999", marginTop: 16, fontSize: 12 },
+  version: { textAlign: "center", color: COLORS.mutedForeground, marginTop: 16, fontSize: 12 },
 });

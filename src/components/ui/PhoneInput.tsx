@@ -1,4 +1,5 @@
 import { StyleSheet, TextInput } from "react-native";
+import { COLORS } from "../../config/app";
 
 interface PhoneInputProps {
   value: string;
@@ -21,11 +22,12 @@ export function PhoneInput({ value, onChange }: PhoneInputProps) {
 
 const styles = StyleSheet.create({
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    padding: 14,
     fontSize: 16,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.gray50,
+    color: COLORS.cardForeground,
   },
 });

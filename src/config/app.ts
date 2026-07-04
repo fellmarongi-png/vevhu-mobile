@@ -1,3 +1,63 @@
+// ---------------------------------------------------------------------------
+// Vevhu Brand Palette — matches vevhu-dashboard CSS variables
+// Primary: oklch(0.65 0.18 55) → warm amber
+// ---------------------------------------------------------------------------
+
+export const COLORS = {
+  // Brand primary (dashboard --primary)
+  primary: "#F59E0B",
+  primaryLight: "#FCD34D",
+  primaryDark: "#D97706",
+  primaryForeground: "#FFFFFF",
+
+  // Secondary
+  secondary: "#FEF3C7",
+  secondaryForeground: "#1C1917",
+
+  // Accent
+  accent: "#FFEDD5",
+
+  // Backgrounds
+  background: "#FAFAF9",
+  card: "#FFFFFF",
+  cardForeground: "#1C1917",
+
+  // Muted
+  muted: "#F5F5F4",
+  mutedForeground: "#78716C",
+
+  // Destructive
+  destructive: "#EF4444",
+  destructiveForeground: "#FFFFFF",
+
+  // Borders
+  border: "#E7E5E4",
+  input: "#E7E5E4",
+  ring: "#F59E0B",
+
+  // Status colors
+  success: "#22C55E",
+  successBg: "#F0FDF4",
+  warning: "#F59E0B",
+  warningBg: "#FFFBEB",
+  error: "#EF4444",
+  errorBg: "#FEF2F2",
+
+  // Legacy / utility
+  white: "#FFFFFF",
+  black: "#000000",
+  gray50: "#FAFAF9",
+  gray100: "#F5F5F4",
+  gray200: "#E7E5E4",
+  gray300: "#D6D3D1",
+  gray400: "#A8A29E",
+  gray500: "#78716C",
+  gray600: "#57534E",
+  gray700: "#44403C",
+  gray800: "#292524",
+  gray900: "#1C1917",
+} as const;
+
 export const CONFIG = {
   SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL || "",
   SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "",

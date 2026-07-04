@@ -1,4 +1,5 @@
 import { StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { COLORS } from "../../config/app";
 import type { FormField as FormFieldType } from "../../types/form";
 import { Dropdown } from "../ui/Dropdown";
 import { PhoneInput } from "../ui/PhoneInput";
@@ -64,7 +65,7 @@ export function FormField({ fieldDef, value, onChange, error }: FormFieldProps) 
             <Switch
               value={!!value}
               onValueChange={onChange}
-              trackColor={{ false: "#ccc", true: "#4CAF50" }}
+              trackColor={{ false: COLORS.gray300, true: COLORS.primary }}
             />
           </View>
         );
@@ -89,15 +90,16 @@ export function FormField({ fieldDef, value, onChange, error }: FormFieldProps) 
 
 const styles = StyleSheet.create({
   fieldContainer: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 6 },
-  required: { color: "#e53935" },
+  label: { fontSize: 14, fontWeight: "600", color: COLORS.gray700, marginBottom: 6 },
+  required: { color: COLORS.error },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    padding: 14,
     fontSize: 16,
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.gray50,
+    color: COLORS.cardForeground,
   },
   multiline: { height: 100, textAlignVertical: "top" },
   toggleRow: {
@@ -106,6 +108,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 8,
   },
-  toggleLabel: { fontSize: 16, color: "#333" },
-  error: { color: "#e53935", fontSize: 12, marginTop: 4 },
+  toggleLabel: { fontSize: 16, color: COLORS.cardForeground },
+  error: { color: COLORS.error, fontSize: 12, marginTop: 4 },
 });

@@ -1,5 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { COLORS } from "../../config/app";
 
 interface PhotoCaptureProps {
   photos: Array<{ uri: string; type: "stand" | "document" }>;
@@ -71,31 +72,31 @@ export function PhotoCapture({ photos, onPhotosChange, minRequired = 1 }: PhotoC
 
 const styles = StyleSheet.create({
   container: { marginVertical: 16 },
-  label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: "600", color: COLORS.gray700, marginBottom: 8 },
   photoList: { marginBottom: 12 },
   photoWrapper: { marginRight: 8, position: "relative" },
-  thumbnail: { width: 80, height: 80, borderRadius: 8 },
+  thumbnail: { width: 80, height: 80, borderRadius: 10 },
   removeBtn: {
     position: "absolute",
     top: -6,
     right: -6,
-    backgroundColor: "#e53935",
+    backgroundColor: COLORS.error,
     borderRadius: 10,
     width: 20,
     height: 20,
     alignItems: "center",
     justifyContent: "center",
   },
-  removeBtnText: { color: "#fff", fontSize: 10, fontWeight: "700" },
-  photoType: { fontSize: 10, textAlign: "center", marginTop: 4, color: "#666" },
+  removeBtnText: { color: COLORS.white, fontSize: 10, fontWeight: "700" },
+  photoType: { fontSize: 10, textAlign: "center", marginTop: 4, color: COLORS.gray600 },
   buttons: { flexDirection: "row", gap: 8 },
   captureBtn: {
     flex: 1,
-    backgroundColor: "#4CAF50",
+    backgroundColor: COLORS.success,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
-  docBtn: { backgroundColor: "#FF9800" },
-  captureBtnText: { color: "#fff", fontWeight: "600" },
+  docBtn: { backgroundColor: COLORS.warning },
+  captureBtnText: { color: COLORS.white, fontWeight: "600" },
 });

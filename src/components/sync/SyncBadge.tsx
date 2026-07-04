@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { COLORS } from "../../config/app";
 
 interface SyncBadgeProps {
   pendingCount: number;
@@ -14,9 +15,9 @@ export function SyncBadge({ pendingCount, isOnline }: SyncBadgeProps) {
       <Text style={styles.text}>
         {isOnline
           ? pendingCount > 0
-            ? `Syncing ${pendingCount} records...`
+            ? `Syncing ${pendingCount} record${pendingCount > 1 ? "s" : ""}...`
             : "All synced"
-          : `Offline - ${pendingCount} pending`}
+          : `Offline — ${pendingCount} pending`}
       </Text>
     </View>
   );
@@ -26,14 +27,15 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 8,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
     marginVertical: 8,
   },
-  online: { backgroundColor: "#E8F5E9" },
-  offline: { backgroundColor: "#FFF3E0" },
+  online: { backgroundColor: COLORS.successBg },
+  offline: { backgroundColor: COLORS.warningBg },
   dot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
-  dotOnline: { backgroundColor: "#4CAF50" },
-  dotOffline: { backgroundColor: "#FF9800" },
-  text: { fontSize: 13, color: "#333" },
+  dotOnline: { backgroundColor: COLORS.success },
+  dotOffline: { backgroundColor: COLORS.warning },
+  text: { fontSize: 13, color: COLORS.gray700, fontWeight: "500" },
 });

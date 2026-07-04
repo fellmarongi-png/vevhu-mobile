@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import SignatureCanvas from "react-native-signature-canvas";
+import { COLORS } from "../../config/app";
 
 interface SignaturePadProps {
   onSignature: (base64: string) => void;
@@ -104,61 +105,61 @@ export function SignaturePad({ onSignature }: SignaturePadProps) {
 
 const styles = StyleSheet.create({
   container: { marginVertical: 16 },
-  label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: "600", color: COLORS.gray700, marginBottom: 8 },
 
   openModalBtn: {
     padding: 16,
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: "#1976D2",
+    borderColor: COLORS.primary,
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
   },
-  openModalBtnText: { color: "#1976D2", fontSize: 16, fontWeight: "600" },
+  openModalBtnText: { color: COLORS.primary, fontSize: 16, fontWeight: "600" },
 
   previewCard: {
     padding: 12,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 10,
+    backgroundColor: COLORS.gray50,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: COLORS.border,
   },
   previewImage: {
     height: 120,
     width: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    borderRadius: 10,
     marginBottom: 10,
   },
   previewActions: { flexDirection: "row", gap: 10 },
   resignBtn: {
     flex: 1,
     padding: 10,
-    backgroundColor: "#1976D2",
-    borderRadius: 6,
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
     alignItems: "center",
   },
-  resignBtnText: { color: "#fff", fontWeight: "600" },
+  resignBtnText: { color: COLORS.primaryForeground, fontWeight: "600" },
   removeBtn: {
     flex: 1,
     padding: 10,
-    backgroundColor: "#ffebee",
-    borderRadius: 6,
+    backgroundColor: COLORS.errorBg,
+    borderRadius: 10,
     alignItems: "center",
   },
-  removeBtnText: { color: "#c62828", fontWeight: "600" },
+  removeBtnText: { color: COLORS.error, fontWeight: "600" },
 
-  modalSafeArea: { flex: 1, backgroundColor: "#1a1a2e" },
+  modalSafeArea: { flex: 1, backgroundColor: COLORS.background },
   modalHeader: {
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 16,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: COLORS.background,
   },
-  modalTitle: { fontSize: 20, fontWeight: "700", color: "#ffffff", marginBottom: 4 },
-  modalSubtitle: { fontSize: 14, color: "#b0bec5" },
+  modalTitle: { fontSize: 20, fontWeight: "700", color: COLORS.cardForeground, marginBottom: 4 },
+  modalSubtitle: { fontSize: 14, color: COLORS.mutedForeground },
 
   canvasWrapper: {
     flex: 1,
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 12,
     overflow: "hidden",
-    backgroundColor: "#ffffff",
+    backgroundColor: COLORS.card,
   },
   canvas: { flex: 1 },
 
@@ -174,32 +175,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingTop: 16,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: COLORS.background,
     gap: 10,
     alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
   clearBtn: {
     padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#37474f",
+    borderRadius: 10,
+    backgroundColor: COLORS.gray200,
     flex: 1,
     alignItems: "center",
   },
-  clearBtnText: { color: "#ffffff", fontWeight: "600" },
+  clearBtnText: { color: COLORS.gray700, fontWeight: "600" },
   cancelBtn: {
     padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#455a64",
+    borderRadius: 10,
+    backgroundColor: COLORS.gray100,
     flex: 1,
     alignItems: "center",
   },
-  cancelBtnText: { color: "#ffffff", fontWeight: "600" },
+  cancelBtnText: { color: COLORS.gray700, fontWeight: "600" },
   saveBtn: {
     padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#2e7d32",
+    borderRadius: 10,
+    backgroundColor: COLORS.success,
     flex: 2,
     alignItems: "center",
   },
-  saveBtnText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
+  saveBtnText: { color: COLORS.white, fontSize: 15, fontWeight: "700" },
 });

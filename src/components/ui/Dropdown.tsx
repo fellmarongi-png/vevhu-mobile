@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { COLORS } from "../../config/app";
 
 interface DropdownProps {
   options: string[];
@@ -49,22 +50,32 @@ export function Dropdown({ options, value, onChange, placeholder }: DropdownProp
 
 const styles = StyleSheet.create({
   trigger: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    padding: 14,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.gray50,
   },
-  value: { fontSize: 16, color: "#333" },
-  placeholder: { fontSize: 16, color: "#999" },
-  arrow: { fontSize: 12, color: "#666" },
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: 32 },
-  dropdown: { backgroundColor: "#fff", borderRadius: 12, maxHeight: 300, paddingVertical: 8 },
-  option: { padding: 16, borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },
-  selected: { backgroundColor: "#E3F2FD" },
-  optionText: { fontSize: 16, color: "#333" },
-  selectedText: { color: "#1976D2", fontWeight: "600" },
+  value: { fontSize: 16, color: COLORS.cardForeground },
+  placeholder: { fontSize: 16, color: COLORS.gray400 },
+  arrow: { fontSize: 12, color: COLORS.gray500 },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", padding: 32 },
+  dropdown: {
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    maxHeight: 300,
+    paddingVertical: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  option: { padding: 16, borderBottomWidth: 1, borderBottomColor: COLORS.gray100 },
+  selected: { backgroundColor: COLORS.secondary },
+  optionText: { fontSize: 16, color: COLORS.cardForeground },
+  selectedText: { color: COLORS.primaryDark, fontWeight: "600" },
 });

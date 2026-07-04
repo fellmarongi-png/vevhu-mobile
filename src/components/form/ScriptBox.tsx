@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { COLORS } from "../../config/app";
 import type { TalkingScript } from "../../types/form";
 
 interface ScriptBoxProps {
@@ -16,23 +17,23 @@ export function ScriptBox({ script }: ScriptBoxProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#E3F2FD",
+    backgroundColor: COLORS.secondary,
     borderLeftWidth: 4,
-    borderLeftColor: "#1976D2",
+    borderLeftColor: COLORS.primary,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 20,
   },
   label: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#1976D2",
+    color: COLORS.primaryDark,
     marginBottom: 8,
     letterSpacing: 0.5,
   },
   text: {
     fontSize: 15,
-    color: "#333",
+    color: COLORS.cardForeground,
     lineHeight: 22,
     fontStyle: "italic",
   },
