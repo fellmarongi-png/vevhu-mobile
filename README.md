@@ -1,5 +1,10 @@
 # Vevhu Field Worker Mobile App
 
+[![Download APK](https://img.shields.io/badge/Download_APK-v1.0.0-orange?style=for-the-badge&logo=android)](https://github.com/fellmarongi-png/vevhu-mobile/releases/download/v1.0.0/vevhu-mobile-v1.0.0.apk)
+
+> 📱 **Direct APK Download:** [vevhu-mobile-v1.0.0.apk (125 MB)](https://github.com/fellmarongi-png/vevhu-mobile/releases/download/v1.0.0/vevhu-mobile-v1.0.0.apk)
+> 📦 **GitHub Release Page:** [https://github.com/fellmarongi-png/vevhu-mobile/releases/tag/v1.0.0](https://github.com/fellmarongi-png/vevhu-mobile/releases/tag/v1.0.0)
+
 An offline-first field data collection mobile application built for Vevhu Resources (Real Estate Verification & Council Urbanization Audit). Built with React Native / Expo SDK 57 targeting standalone Android APK production builds.
 
 ## Architecture & Tech Stack
