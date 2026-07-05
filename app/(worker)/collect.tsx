@@ -25,6 +25,7 @@ const DEFAULT_SCHEMA: FormSchema = {
       id: "stand_number_official",
       type: "text",
       label: "Stand Number (Official Record)",
+      placeholder: "e.g. 1042",
       required: true,
       order: 1,
     },
@@ -32,42 +33,45 @@ const DEFAULT_SCHEMA: FormSchema = {
       id: "stand_number_physical",
       type: "text",
       label: "Stand Number (On-Site Physical/Claimed)",
+      placeholder: "e.g. 1042-B",
       required: true,
       order: 2,
+    },
+    {
+      id: "is_legal_owner",
+      type: "toggle",
+      label: "Is Respondent the Registered Legal Owner?",
+      required: true,
+      order: 3,
     },
     {
       id: "respondent_type",
       type: "dropdown",
       label: "Respondent Type",
       required: true,
-      order: 3,
+      order: 4,
       options: ["Registered Owner", "Tenant", "Caretaker/Relative", "Squatter"],
     },
     {
       id: "respondent_name",
       type: "text",
       label: "Respondent Full Name",
-      required: true,
-      order: 4,
-    },
-    {
-      id: "respondent_phone",
-      type: "phone",
-      label: "Respondent Contact Number",
+      placeholder: "Full Name of person interviewed",
       required: true,
       order: 5,
     },
     {
-      id: "is_legal_owner",
-      type: "toggle",
-      label: "Is Respondent the Legal Owner?",
+      id: "respondent_phone",
+      type: "phone",
+      label: "Respondent Contact Phone Number",
       required: true,
       order: 6,
     },
     {
       id: "owner_name",
       type: "text",
-      label: "Owner Full Name",
+      label: "Legal Owner Full Name",
+      placeholder: "Owner's Full Name (If different from respondent)",
       required: true,
       order: 7,
       section: "owner_details",
@@ -76,7 +80,7 @@ const DEFAULT_SCHEMA: FormSchema = {
     {
       id: "owner_phone",
       type: "phone",
-      label: "Owner Contact Details",
+      label: "Legal Owner Contact Phone Number",
       required: true,
       order: 8,
       section: "owner_details",
@@ -85,7 +89,7 @@ const DEFAULT_SCHEMA: FormSchema = {
     {
       id: "account_standing",
       type: "dropdown",
-      label: "Account Standing?",
+      label: "Account Standing (Rates Paid up to date?)",
       required: true,
       order: 9,
       options: ["Yes", "No", "Unsure"],
@@ -93,7 +97,7 @@ const DEFAULT_SCHEMA: FormSchema = {
     {
       id: "action_taken",
       type: "dropdown",
-      label: "Action Taken",
+      label: "Action Taken / Notice Served",
       required: false,
       order: 10,
       section: "account_action",
@@ -107,7 +111,8 @@ const DEFAULT_SCHEMA: FormSchema = {
     {
       id: "field_notes",
       type: "long_text",
-      label: "Field Notes / Observations",
+      label: "Field Notes & Observations",
+      placeholder: "Add any additional remarks or structural findings...",
       required: false,
       order: 11,
     },
@@ -116,18 +121,24 @@ const DEFAULT_SCHEMA: FormSchema = {
     {
       id: "intro",
       section: "intro",
-      text: "Good day. I am from Vevhu Resources. We are verifying property records ahead of council urbanization and rates assessment. Are you the registered owner of this stand?",
+      text: "Good day. I am representing Vevhu Resources. We are verifying property records for council urbanization. Are you the registered legal owner of this stand?",
+    },
+    {
+      id: "owner_verified",
+      section: "owner_verified",
+      text: "✅ Registered Owner Verified: Please confirm contact details and rates standing below.",
+      condition: { field: "is_legal_owner", value: true },
     },
     {
       id: "owner_details",
       section: "owner_details",
-      text: "Since you are managing the property, please provide the legal owner's current phone number so we can update the council database and protect this property layout.",
+      text: "📋 Non-Owner Respondent (Tenant/Caretaker): Please record the legal owner's contact details below for council database verification.",
       condition: { field: "is_legal_owner", value: false },
     },
     {
       id: "account_action",
       section: "account_action",
-      text: "Our records show your account needs regularization. Please visit our office within 7 days to formalize your standing before council rates take effect.",
+      text: "⚠️ Regularization Required: Our records show your account needs regularization. Please visit our office within 7 days to formalize your standing.",
       condition: { field: "account_standing", value: "No" },
     },
   ],
@@ -227,6 +238,14 @@ export default function CollectScreen() {
         const str = (v: unknown): string | null => (v == null ? null : String(v));
         const boolToInt = (v: unknown): number => (v === true || v === 1 || v === "true" ? 1 : 0);
 
+        const isOwner =
+          boolToInt(formData.is_legal_owner) === 1 ||
+          formData.respondent_type === "Registered Owner";
+        const finalOwnerName = isOwner ? str(formData.respondent_name) : str(formData.owner_name);
+        const finalOwnerPhone = isOwner
+          ? str(formData.respondent_phone)
+          : str(formData.owner_phone);
+
         await db.writeTransaction(async (tx) => {
           await tx.execute(
             `INSERT INTO submissions (id, worker_id, form_schema_version, stand_number_official, stand_number_physical, respondent_type, respondent_name, respondent_phone, is_legal_owner, owner_name, owner_phone, account_standing, action_taken, field_notes, extra_fields, gps_latitude, gps_longitude, gps_accuracy, photos, audio_recording_key, audio_duration_seconds, signature_key, status, collected_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -236,12 +255,12 @@ export default function CollectScreen() {
               DEFAULT_SCHEMA.version,
               str(formData.stand_number_official),
               str(formData.stand_number_physical),
-              str(formData.respondent_type),
+              str(formData.respondent_type) || (isOwner ? "Registered Owner" : "Tenant"),
               str(formData.respondent_name),
               str(formData.respondent_phone),
-              boolToInt(formData.is_legal_owner),
-              str(formData.owner_name),
-              str(formData.owner_phone),
+              isOwner ? 1 : 0,
+              finalOwnerName,
+              finalOwnerPhone,
               str(formData.account_standing),
               str(formData.action_taken),
               str(formData.field_notes),

@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useEffect, useImperativeHandle } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 import type { FormField as FormFieldType, FormSchema, TalkingScript } from "../../types/form";
@@ -24,6 +24,7 @@ export const DynamicForm = forwardRef<DynamicFormRef, DynamicFormProps>(function
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: defaultValues || {},
@@ -35,6 +36,16 @@ export const DynamicForm = forwardRef<DynamicFormRef, DynamicFormProps>(function
   }));
 
   const watchedValues = useWatch({ control });
+  const isLegalOwner = watchedValues.is_legal_owner;
+  const respondentType = watchedValues.respondent_type;
+
+  useEffect(() => {
+    if (isLegalOwner === true && respondentType !== "Registered Owner") {
+      setValue("respondent_type", "Registered Owner");
+    } else if (respondentType === "Registered Owner" && isLegalOwner !== true) {
+      setValue("is_legal_owner", true);
+    }
+  }, [isLegalOwner, respondentType, setValue]);
 
   const isFieldVisible = (field: FormFieldType): boolean => {
     if (!field.condition) return true;
