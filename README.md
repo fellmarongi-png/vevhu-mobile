@@ -1,8 +1,8 @@
 # Vevhu Field Worker Mobile App
 
-[![Download APK](https://img.shields.io/badge/Download_Latest_APK-v1.0.0-orange?style=for-the-badge&logo=android)](https://github.com/fellmarongi-png/vevhu-dashboard/raw/main/public/downloads/vevhu-mobile-latest.apk)
+[![Download APK](https://img.shields.io/badge/Download_Latest_APK-Latest-orange?style=for-the-badge&logo=android)](https://vevhu-dashboard.vercel.app/downloads/vevhu-mobile-latest.apk)
 
-> 📱 **Direct Latest APK Download:** [vevhu-mobile-latest.apk (124 MB)](https://github.com/fellmarongi-png/vevhu-dashboard/raw/main/public/downloads/vevhu-mobile-latest.apk)
+> 📱 **Direct Latest APK Download:** [vevhu-mobile-latest.apk (124 MB)](https://vevhu-dashboard.vercel.app/downloads/vevhu-mobile-latest.apk)
 > 📦 **GitHub Mobile Repo:** [https://github.com/fellmarongi-png/vevhu-mobile](https://github.com/fellmarongi-png/vevhu-mobile)
 
 An offline-first field data collection mobile application built for Vevhu Resources (Real Estate Verification & Council Urbanization Audit). Built with React Native / Expo SDK 57 targeting standalone Android APK production builds.
@@ -26,7 +26,7 @@ An offline-first field data collection mobile application built for Vevhu Resour
 
 1. **Offline-First Synchronization:** All field surveys, media queues, and GPS logs are saved locally first. When network connectivity is restored (`NetInfo`), background workers sync data over-the-air to Supabase.
 2. **Global Diagnostic Crash Screen:** Integrated unhandled exception tracking that catches startup errors cleanly and renders an interactive on-screen diagnostic overlay instead of terminating the app.
-3. **Live OTA Updates:** Configured with EAS Update on the `production` channel. App automatically checks on load and displays an interactive update banner when a new bundle is downloaded.
+3. **Live OTA Updates:** Configured with EAS Update on the `production` channel. App automatically downloads updates in the background when on data, applying on next launch.
 
 ## Build & Deployment Commands
 
@@ -39,11 +39,20 @@ npx tsc --noEmit
 npx expo-doctor
 
 # 3. Build Standalone Production Android APK
-npx eas-cli build --platform android --profile production --non-interactive
+GRADLE_OPTS="-Dorg.gradle.workers.max=48 -Dorg.gradle.parallel=true -Dorg.gradle.daemon=true -Dorg.gradle.jvmargs='-Xmx16g -XX:MaxMetaspaceSize=2048m'" NODE_OPTIONS="--max-old-space-size=16384" eas build --platform android --profile production --local --non-interactive
 
-# 4. Publish Live OTA Update
+# 4. After building, copy APK and deploy via Vercel (APK is too large for GitHub)
+cp build-*.apk ../vevhu-dashboard/public/downloads/vevhu-mobile-latest.apk
+cd ../vevhu-dashboard && vercel --prod
+
+# 5. Publish Live OTA Update
 npx eas-cli update --branch production --environment production --message "Release notes"
 ```
+
+## APK Distribution
+
+The latest APK is hosted on Vercel (not GitHub — it exceeds the 100MB limit):
+- **Download:** https://vevhu-dashboard.vercel.app/downloads/vevhu-mobile-latest.apk
 
 ## Project Directory Structure
 
