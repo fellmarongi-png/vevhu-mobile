@@ -1,327 +1,259 @@
-import { formatDistanceToNow } from "date-fns";
-import { File } from "expo-file-system";
-import { router } from "expo-router";
-import { useCallback, useContext, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { UpdateBanner } from "../../src/components/sync/UpdateBanner";
+// ---------------------------------------------------------------------------
+// Vevhu Field - Settings Screen
+// ---------------------------------------------------------------------------
+
+import { useState } from "react";
+import {
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { COLORS } from "../../src/config/app";
-import { useAuth } from "../../src/hooks/useAuth";
-import { useSyncStatus } from "../../src/hooks/useSyncStatus";
-import { db } from "../../src/services/powersync";
-import { forceSync } from "../../src/services/sync";
-import { AuthContext } from "../_layout";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface MediaQueueRow {
+interface SettingItem {
   id: string;
-  file_path: string;
-  upload_status: string;
+  title: string;
+  subtitle?: string;
+  icon: string;
+  toggle?: boolean;
+  onToggle?: (value: boolean) => void;
+  onPress?: () => void;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function safeRelativeTime(dateStr: string | null): string {
-  if (!dateStr) return "Never";
-  try {
-    return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
-  } catch {
-    return dateStr;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Screen
-// ---------------------------------------------------------------------------
+const settingsGroups: SettingItem[][] = [
+  [
+    {
+      id: "profile",
+      title: "Profile",
+      subtitle: "John Chipunza",
+      icon: "👤",
+      onPress: () => Alert.alert("Profile", "Edit profile"),
+    },
+    {
+      id: "notifications",
+      title: "Notifications",
+      subtitle: "Manage alerts",
+      icon: "🔔",
+      toggle: true,
+      onToggle: (v) => console.log("Notifications:", v),
+    },
+    {
+      id: "offline",
+      title: "Offline Mode",
+      subtitle: "Allow offline collection",
+      icon: "📡",
+      toggle: true,
+      onToggle: (v) => console.log("Offline mode:", v),
+    },
+  ],
+  [
+    {
+      id: "language",
+      title: "Language",
+      subtitle: "English",
+      icon: "🌐",
+      onPress: () => Alert.alert("Language", "Select language"),
+    },
+    { id: "appVersion", title: "App Version", subtitle: "1.0.0", icon: "📱" },
+    {
+      id: "syncInterval",
+      title: "Sync Interval",
+      subtitle: "Every 5 minutes",
+      icon: "⏱️",
+      onPress: () => Alert.alert("Sync", "Change sync interval"),
+    },
+  ],
+  [
+    {
+      id: "about",
+      title: "About",
+      subtitle: "Vevhu Field v1.0.0",
+      icon: "ℹ️",
+      onPress: () => Alert.alert("About", "Vevhu Field - Field Data Collection"),
+    },
+    {
+      id: "help",
+      title: "Help Center",
+      subtitle: "FAQs and support",
+      icon: "❓",
+      onPress: () => Alert.alert("Help", "Opening help center..."),
+    },
+    {
+      id: "terms",
+      title: "Terms & Privacy",
+      subtitle: "Legal information",
+      icon: "📜",
+      onPress: () => Alert.alert("Terms", "Viewing terms and privacy policy..."),
+    },
+  ],
+];
 
 export default function SettingsScreen() {
-  const { session } = useContext(AuthContext);
-  const { logout } = useAuth();
-  const syncStatus = useSyncStatus();
-
-  const [isForceSyncing, setIsForceSyncing] = useState(false);
-  const [isClearingMedia, setIsClearingMedia] = useState(false);
-
-  const user = session?.user ?? null;
-
-  // ---------------------------------------------------------------------------
-  // Actions
-  // ---------------------------------------------------------------------------
+  const [logoutPressed, setLogoutPressed] = useState(false);
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure? Unsynced records will remain on this device.", [
+    Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Logout",
         style: "destructive",
-        onPress: async () => {
-          await logout();
-          router.replace("/login");
-        },
+        onPress: () => Alert.alert("Logged out", "You have been logged out successfully"),
       },
     ]);
   };
 
-  const handleForceSync = useCallback(async () => {
-    setIsForceSyncing(true);
-    try {
-      await forceSync();
-      Alert.alert("Sync", "Sync triggered successfully.");
-    } catch (_err) {
-      Alert.alert("Sync Error", "Could not connect to server. Try again later.");
-    } finally {
-      setIsForceSyncing(false);
-    }
-  }, []);
-
-  const handleClearSyncedMedia = useCallback(async () => {
-    Alert.alert(
-      "Clear Synced Media",
-      "This will delete local copies of uploaded photos and audio. They are safely stored on the server. Continue?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: async () => {
-            setIsClearingMedia(true);
-            try {
-              // Fetch all successfully uploaded media rows
-              const rows = await db.getAll<MediaQueueRow>(
-                "SELECT id, file_path, upload_status FROM media_queue WHERE upload_status = 'uploaded'",
-              );
-
-              let deletedCount = 0;
-              let errorCount = 0;
-
-              for (const row of rows) {
-                if (row.file_path) {
-                  try {
-                    const file = new File(row.file_path);
-                    // Only attempt delete if the file actually exists
-                    if (file.exists) {
-                      await file.delete();
-                      deletedCount++;
-                    }
-                  } catch {
-                    errorCount++;
-                  }
-                }
-              }
-
-              const msg =
-                `Deleted ${deletedCount} file${deletedCount !== 1 ? "s" : ""}.` +
-                (errorCount > 0 ? ` ${errorCount} could not be removed.` : "");
-              Alert.alert("Done", msg);
-            } catch (err) {
-              Alert.alert("Error", "Could not clear media files.");
-              console.error("[Settings] clearSyncedMedia error:", err);
-            } finally {
-              setIsClearingMedia(false);
-            }
-          },
-        },
-      ],
-    );
-  }, []);
-
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
-  const lastSyncedLabel = safeRelativeTime(syncStatus.lastSyncedAt);
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Settings</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
-      {/* Profile */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>PROFILE</Text>
-        <Row label="Name" value={user?.full_name || "-"} />
-        <Row label="Zone" value={user?.zone_assigned || "Not assigned"} />
-        <Row label="Daily target" value={`${user?.daily_target ?? 30} records`} />
-      </View>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Settings</Text>
+        </View>
 
-      {/* Sync status */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>SYNC STATUS</Text>
-        <Row
-          label="Connection"
-          value={syncStatus.isConnected ? "Online" : "Offline"}
-          valueStyle={syncStatus.isConnected ? styles.online : styles.offline}
-        />
-        <Row
-          label="Pending records"
-          value={`${syncStatus.pendingSubmissions}`}
-          valueStyle={syncStatus.pendingSubmissions > 0 ? styles.warning : undefined}
-        />
-        <Row
-          label="Pending media"
-          value={`${syncStatus.pendingMedia} files`}
-          valueStyle={syncStatus.pendingMedia > 0 ? styles.warning : undefined}
-        />
-        <Row label="Last synced" value={lastSyncedLabel} />
-        {syncStatus.isSyncing && <Text style={styles.syncingLabel}>Syncing…</Text>}
+        {/* Profile Section */}
+        <View style={styles.profileSection}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>JC</Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>John Chipunza</Text>
+            <Text style={styles.profileRole}>Field Agent</Text>
+          </View>
+          <TouchableOpacity style={styles.editButton}>
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+        </View>
 
+        {/* Settings Groups */}
+        {settingsGroups.map((group, groupIndex) => (
+          <View key={groupIndex} style={styles.settingsGroup}>
+            {group.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.settingItem}
+                onPress={item.onPress}
+                disabled={item.toggle !== undefined}
+              >
+                <View style={styles.settingLeft}>
+                  <Text style={styles.settingIcon}>{item.icon}</Text>
+                  <View style={styles.settingText}>
+                    <Text style={styles.settingTitle}>{item.title}</Text>
+                    {item.subtitle && <Text style={styles.settingSubtitle}>{item.subtitle}</Text>}
+                  </View>
+                </View>
+                {item.toggle !== undefined ? (
+                  <Switch
+                    value={item.toggle}
+                    onValueChange={item.onToggle}
+                    trackColor={{ false: COLORS.gray300, true: COLORS.primary }}
+                    thumbColor={COLORS.white}
+                  />
+                ) : (
+                  <Text style={styles.chevron}>›</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+
+        {/* Logout Button */}
         <TouchableOpacity
-          style={[styles.syncButton, isForceSyncing && styles.buttonDisabled]}
-          onPress={handleForceSync}
-          disabled={isForceSyncing}
+          style={[styles.logoutButton, logoutPressed && styles.logoutButtonPressed]}
+          onPress={handleLogout}
+          activeOpacity={0.7}
         >
-          <Text style={styles.syncButtonText}>{isForceSyncing ? "Connecting…" : "Sync Now"}</Text>
+          <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
-      </View>
 
-      {/* Storage */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>STORAGE</Text>
-        <Text style={styles.hint}>
-          Uploaded media files can be cleared from this device to free space.
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.clearButton, isClearingMedia && styles.buttonDisabled]}
-          onPress={handleClearSyncedMedia}
-          disabled={isClearingMedia}
-        >
-          <Text style={styles.clearButtonText}>
-            {isClearingMedia ? "Clearing…" : "Clear Synced Media"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* App Updates */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>APP UPDATES</Text>
-        <UpdateBanner />
-      </View>
-
-      {/* Logout */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.version}>Vevhu Field v1.0.0</Text>
-    </ScrollView>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>© 2024 Vevhu Resources</Text>
+          <Text style={styles.footerText}>All rights reserved</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Sub-component
-// ---------------------------------------------------------------------------
-
-function Row({ label, value, valueStyle }: { label: string; value: string; valueStyle?: object }) {
-  return (
-    <View style={rowStyles.row}>
-      <Text style={rowStyles.label}>{label}</Text>
-      <Text style={[rowStyles.value, valueStyle]}>{value}</Text>
-    </View>
-  );
-}
-
-const rowStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  label: { fontSize: 14, color: COLORS.mutedForeground },
-  value: {
-    fontSize: 14,
-    color: COLORS.cardForeground,
-    fontWeight: "500",
-    flexShrink: 1,
-    textAlign: "right",
-  },
-});
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: "700", color: COLORS.cardForeground, marginBottom: 20 },
-
-  section: {
+  scrollView: { flex: 1 },
+  header: { paddingHorizontal: 16, paddingVertical: 16 },
+  title: { fontSize: 22, fontWeight: "700", color: COLORS.cardForeground },
+  profileSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     backgroundColor: COLORS.card,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  sectionTitle: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: COLORS.mutedForeground,
-    letterSpacing: 1,
-    marginBottom: 10,
-  },
-  hint: { fontSize: 13, color: COLORS.mutedForeground, marginBottom: 12, lineHeight: 18 },
-  syncingLabel: {
-    fontSize: 12,
-    color: COLORS.primary,
-    marginTop: 6,
-    fontStyle: "italic",
-  },
-
-  online: { color: COLORS.success },
-  offline: { color: COLORS.error },
-  warning: { color: COLORS.warning },
-
-  syncButton: {
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    borderRadius: 10,
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 14,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  syncButtonText: { color: COLORS.primaryForeground, fontWeight: "600" },
-
-  clearButton: {
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    borderWidth: 1.5,
+  avatarText: { fontSize: 18, fontWeight: "700", color: COLORS.white },
+  profileInfo: { flex: 1, marginLeft: 12 },
+  profileName: { fontSize: 16, fontWeight: "700", color: COLORS.cardForeground },
+  profileRole: { fontSize: 13, color: COLORS.mutedForeground, marginTop: 2 },
+  editButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: COLORS.gray100,
+  },
+  editButtonText: { fontSize: 12, fontWeight: "600", color: COLORS.primary },
+  settingsGroup: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: COLORS.border,
-    backgroundColor: COLORS.gray50,
+    overflow: "hidden",
   },
-  clearButtonText: { color: COLORS.gray700, fontWeight: "600" },
-
-  buttonDisabled: { opacity: 0.5 },
-
-  logoutButton: {
-    backgroundColor: COLORS.error,
-    paddingVertical: 16,
-    borderRadius: 10,
+  settingItem: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
-    shadowColor: COLORS.error,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
-  logoutButtonText: { color: COLORS.white, fontSize: 16, fontWeight: "700" },
-
-  version: { textAlign: "center", color: COLORS.mutedForeground, marginTop: 16, fontSize: 12 },
+  settingLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
+  settingIcon: { fontSize: 20, marginRight: 12 },
+  settingText: { flex: 1 },
+  settingTitle: { fontSize: 15, fontWeight: "500", color: COLORS.cardForeground },
+  settingSubtitle: { fontSize: 12, color: COLORS.mutedForeground, marginTop: 2 },
+  chevron: { fontSize: 20, color: COLORS.gray400 },
+  logoutButton: {
+    margin: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: COLORS.errorBg,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.error,
+  },
+  logoutButtonPressed: { opacity: 0.8 },
+  logoutText: { fontSize: 16, fontWeight: "700", color: COLORS.error },
+  footer: { paddingHorizontal: 16, paddingVertical: 24, alignItems: "center" },
+  footerText: { fontSize: 12, color: COLORS.mutedForeground, marginBottom: 4 },
 });

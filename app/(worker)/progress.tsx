@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../src/config/app";
+import { useAuth } from "../../src/hooks/useAuth";
 import { AuthContext } from "../_layout";
 
 interface SubmissionRow {
@@ -200,6 +201,7 @@ function DetailModal({
 
 export default function ProgressScreen() {
   const { session } = useContext(AuthContext);
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
   const userId = session?.user?.id ?? "";
   const [filterMode, setFilterMode] = useState<"my" | "team">("my");
@@ -211,27 +213,29 @@ export default function ProgressScreen() {
     representation: "date",
   });
 
+  const effectiveUserId = userId || user?.id || "a0000000-0000-0000-0000-000000000001";
+
   // Summary Counts
   const { data: myToday } = useQuery<{ count: number }>(
-    "SELECT COUNT(*) AS count FROM submissions WHERE worker_id = ? AND collected_at >= ?",
-    [userId, todayStart],
+    "SELECT COUNT(*) AS count FROM submissions WHERE (worker_id = ? OR worker_id = '' OR worker_id IS NULL) AND collected_at >= ?",
+    [effectiveUserId, todayStart],
   );
   const { data: teamToday } = useQuery<{ count: number }>(
     "SELECT COUNT(*) AS count FROM submissions WHERE collected_at >= ?",
     [todayStart],
   );
   const { data: myWeek } = useQuery<{ count: number }>(
-    "SELECT COUNT(*) AS count FROM submissions WHERE worker_id = ? AND collected_at >= ?",
-    [userId, weekStart],
+    "SELECT COUNT(*) AS count FROM submissions WHERE (worker_id = ? OR worker_id = '' OR worker_id IS NULL) AND collected_at >= ?",
+    [effectiveUserId, weekStart],
   );
 
   // Submissions Query (My vs Team)
   const querySql =
     filterMode === "my"
-      ? `SELECT s.*, u.full_name AS worker_name FROM submissions s LEFT JOIN users u ON s.worker_id = u.id WHERE s.worker_id = ? ORDER BY s.collected_at DESC LIMIT 50`
+      ? `SELECT s.*, u.full_name AS worker_name FROM submissions s LEFT JOIN users u ON s.worker_id = u.id WHERE (s.worker_id = ? OR s.worker_id = '' OR s.worker_id IS NULL) ORDER BY s.collected_at DESC LIMIT 50`
       : `SELECT s.*, u.full_name AS worker_name FROM submissions s LEFT JOIN users u ON s.worker_id = u.id ORDER BY s.collected_at DESC LIMIT 100`;
 
-  const queryParams = filterMode === "my" ? [userId] : [];
+  const queryParams = filterMode === "my" ? [effectiveUserId] : [];
   const { data: submissions } = useQuery<SubmissionRow>(querySql, queryParams);
 
   // Filter by search query

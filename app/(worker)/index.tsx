@@ -1,3 +1,5 @@
+import { useQuery } from "@powersync/react-native";
+import { formatISO, startOfDay } from "date-fns";
 import { router } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SyncBadge } from "../../src/components/sync/SyncBadge";
@@ -8,6 +10,22 @@ import { useNetworkStatus } from "../../src/hooks/useNetworkStatus";
 export default function HomeScreen() {
   const { user } = useAuth();
   const { isConnected } = useNetworkStatus();
+
+  const todayStart = formatISO(startOfDay(new Date()), { representation: "date" });
+
+  const { data: todayCountRows } = useQuery<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM submissions WHERE collected_at >= ?",
+    [todayStart],
+  );
+
+  const { data: pendingCountRows } = useQuery<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM submissions WHERE status = 'pending'",
+  );
+
+  const todayCount = todayCountRows?.[0]?.count ?? 0;
+  const pendingCount = pendingCountRows?.[0]?.count ?? 0;
+  const target = user?.daily_target || 30;
+  const progressPercent = Math.min(100, Math.round((todayCount / target) * 100));
 
   return (
     <View style={styles.container}>
@@ -25,32 +43,35 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      <SyncBadge pendingCount={0} isOnline={isConnected} />
+      <SyncBadge pendingCount={pendingCount} isOnline={isConnected} />
 
       {/* Stats Card */}
       <View style={styles.statsCard}>
         <Text style={styles.statsTitle}>Today's Progress</Text>
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: COLORS.primary }]}>0</Text>
+            <Text style={[styles.statNumber, { color: COLORS.primary }]}>{todayCount}</Text>
             <Text style={styles.statLabel}>Records</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={[styles.statNumber, { color: COLORS.primary }]}>
-              0/{user?.daily_target || 30}
+              {todayCount}/{target}
             </Text>
             <Text style={styles.statLabel}>Target</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: COLORS.primary }]}>0h</Text>
-            <Text style={styles.statLabel}>Active</Text>
+            <Text style={[styles.statNumber, { color: COLORS.primary }]}>
+              {pendingCount > 0 ? `${pendingCount} pending` : "Synced"}
+            </Text>
+            <Text style={styles.statLabel}>Sync Status</Text>
           </View>
         </View>
+
         {/* Progress bar */}
         <View style={styles.progressBarBg}>
-          <View style={[styles.progressBarFill, { width: "0%" }]} />
+          <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
         </View>
       </View>
 
@@ -99,7 +120,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
     alignSelf: "center",
   },
-  statNumber: { fontSize: 24, fontWeight: "700" },
+  statNumber: { fontSize: 22, fontWeight: "700" },
   statLabel: { fontSize: 12, color: COLORS.mutedForeground, marginTop: 4, fontWeight: "500" },
   progressBarBg: {
     height: 6,
