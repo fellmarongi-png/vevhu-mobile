@@ -1,11 +1,27 @@
 import NetInfo from "@react-native-community/netinfo";
+
 import { Tabs } from "expo-router";
+import * as Updates from "expo-updates";
 import { useEffect } from "react";
 import { Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../src/config/app";
 import { registerBackgroundSync } from "../../src/services/background-sync";
 import { processMediaQueue } from "../../src/services/media-sync";
+
+async function checkForSilentUpdates() {
+  try {
+    if (__DEV__) return;
+    const check = await Updates.checkForUpdateAsync();
+    if (check.isAvailable) {
+      console.log("[Updates] Downloading silent background update...");
+      await Updates.fetchUpdateAsync();
+      console.log("[Updates] Background update downloaded — ready for next launch.");
+    }
+  } catch {
+    // Silent catch — operate offline without interrupting worker flow
+  }
+}
 
 export default function WorkerLayout() {
   const insets = useSafeAreaInsets();
@@ -16,11 +32,14 @@ export default function WorkerLayout() {
       console.warn("[Sync] Background sync registration:", err),
     );
 
-    // Process pending media uploads immediately on mount & when network becomes connected
+    // Process pending media uploads & check for updates silently in background when connected
     processMediaQueue().catch(() => {});
+    checkForSilentUpdates();
+
     const unsubscribe = NetInfo.addEventListener((state) => {
       if (state.isConnected && state.isInternetReachable) {
         processMediaQueue().catch((err) => console.warn("[MediaSync] Process queue error:", err));
+        checkForSilentUpdates();
       }
     });
 
