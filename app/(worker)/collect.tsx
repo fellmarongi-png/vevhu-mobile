@@ -61,11 +61,19 @@ const DEFAULT_SCHEMA: FormSchema = {
       order: 5,
     },
     {
+      id: "respondent_national_id",
+      type: "national_id",
+      label: "Respondent National ID Number",
+      placeholder: "63-2235942 E 59",
+      required: false,
+      order: 6,
+    },
+    {
       id: "respondent_phone",
       type: "phone",
       label: "Respondent Contact Phone Number",
       required: true,
-      order: 6,
+      order: 7,
     },
     {
       id: "owner_name",

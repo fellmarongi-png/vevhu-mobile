@@ -1,4 +1,11 @@
-export type FieldType = "text" | "dropdown" | "toggle" | "phone" | "number" | "long_text";
+export type FieldType =
+  | "text"
+  | "dropdown"
+  | "toggle"
+  | "phone"
+  | "number"
+  | "long_text"
+  | "national_id";
 
 export interface FieldCondition {
   field: string;

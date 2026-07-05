@@ -365,6 +365,10 @@ export default function ProgressScreen() {
         data={filteredSubmissions}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
         contentContainerStyle={[styles.listContent, { paddingBottom: (insets.bottom || 20) + 20 }]}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

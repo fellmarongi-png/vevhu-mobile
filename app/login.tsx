@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -14,34 +14,56 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../src/config/app";
-import { loginWithPin } from "../src/services/auth";
+import { getLastUser, loginWithPin, type StoredUser } from "../src/services/auth";
 
 export default function LoginScreen() {
+  const [rememberedUser, setRememberedUser] = useState<StoredUser | null>(null);
+  const [isSwitchingUser, setIsSwitchingUser] = useState(false);
   const [name, setName] = useState("");
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const insets = useSafeAreaInsets();
 
+  useEffect(() => {
+    async function loadLastUser() {
+      const lastUser = await getLastUser();
+      if (lastUser?.name) {
+        setRememberedUser(lastUser);
+        setName(lastUser.name);
+      }
+    }
+    loadLastUser();
+  }, []);
+
   const handleLogin = async () => {
-    if (!name.trim()) {
+    const loginName = isSwitchingUser || !rememberedUser ? name.trim() : rememberedUser.name;
+    if (!loginName) {
       Alert.alert("Error", "Please enter your name");
       return;
     }
     if (pin.length !== 4) {
-      Alert.alert("Error", "PIN must be 4 digits");
+      Alert.alert("Error", "Please enter your 4-digit PIN");
       return;
     }
 
     setLoading(true);
     try {
-      await loginWithPin(name.trim(), pin);
+      await loginWithPin(loginName, pin);
       router.replace("/(worker)");
     } catch (error: any) {
-      Alert.alert("Login Failed", error.message || "Invalid name or PIN");
+      Alert.alert("Login Failed", error.message || "Invalid PIN");
     } finally {
       setLoading(false);
     }
   };
+
+  const showQuickUserCard = rememberedUser && !isSwitchingUser;
+  const userInitials = (rememberedUser?.name || "V")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <KeyboardAvoidingView
@@ -74,44 +96,110 @@ export default function LoginScreen() {
 
           {/* Login Card */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Welcome back</Text>
-            <Text style={styles.cardDescription}>Sign in with your name and PIN to continue</Text>
+            {showQuickUserCard ? (
+              /* State 1: Quick Remembered User Login Card */
+              <View style={styles.quickUserContainer}>
+                <View style={styles.avatarCircle}>
+                  <Text style={styles.avatarInitials}>{userInitials}</Text>
+                </View>
+                <Text style={styles.welcomeTitle}>Welcome back,</Text>
+                <Text style={styles.userName}>{rememberedUser.name}</Text>
+                <View style={styles.roleBadge}>
+                  <Text style={styles.roleBadgeText}>
+                    {rememberedUser.role || "Field Collector"}
+                  </Text>
+                </View>
 
-            <View style={styles.form}>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Your Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter your full name"
-                  placeholderTextColor={COLORS.gray400}
-                  autoCapitalize="words"
-                />
+                <View style={styles.form}>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.label}>Enter 4-Digit PIN</Text>
+                    <TextInput
+                      style={styles.pinInput}
+                      value={pin}
+                      onChangeText={(v) => setPin(v.replace(/\D/g, "").slice(0, 4))}
+                      placeholder="----"
+                      placeholderTextColor={COLORS.gray400}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                      secureTextEntry
+                      autoFocus
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.button, loading && styles.buttonDisabled]}
+                    onPress={handleLogin}
+                    disabled={loading}
+                  >
+                    <Text style={styles.buttonText}>{loading ? "Signing in..." : "Sign In"}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.switchUserBtn}
+                    onPress={() => setIsSwitchingUser(true)}
+                  >
+                    <Text style={styles.switchUserText}>
+                      Not {rememberedUser.name}? Sign in as another user
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
+            ) : (
+              /* State 2: Full Login Form for New / Other User */
+              <View>
+                <Text style={styles.cardTitle}>Sign In</Text>
+                <Text style={styles.cardDescription}>
+                  Enter your full name and PIN to access field tools
+                </Text>
 
-              <View style={styles.fieldGroup}>
-                <Text style={styles.label}>PIN</Text>
-                <TextInput
-                  style={styles.pinInput}
-                  value={pin}
-                  onChangeText={(v) => setPin(v.replace(/\D/g, "").slice(0, 4))}
-                  placeholder="----"
-                  placeholderTextColor={COLORS.gray400}
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  secureTextEntry
-                />
+                <View style={styles.form}>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.label}>Your Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={name}
+                      onChangeText={setName}
+                      placeholder="Enter full name"
+                      placeholderTextColor={COLORS.gray400}
+                      autoCapitalize="words"
+                    />
+                  </View>
+
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.label}>4-Digit PIN</Text>
+                    <TextInput
+                      style={styles.pinInput}
+                      value={pin}
+                      onChangeText={(v) => setPin(v.replace(/\D/g, "").slice(0, 4))}
+                      placeholder="----"
+                      placeholderTextColor={COLORS.gray400}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                      secureTextEntry
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.button, loading && styles.buttonDisabled]}
+                    onPress={handleLogin}
+                    disabled={loading}
+                  >
+                    <Text style={styles.buttonText}>{loading ? "Signing in..." : "Sign In"}</Text>
+                  </TouchableOpacity>
+
+                  {rememberedUser && (
+                    <TouchableOpacity
+                      style={styles.switchUserBtn}
+                      onPress={() => setIsSwitchingUser(false)}
+                    >
+                      <Text style={styles.switchUserText}>
+                        ← Back to {rememberedUser.name}'s account
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-
-              <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
-                onPress={handleLogin}
-                disabled={loading}
-              >
-                <Text style={styles.buttonText}>{loading ? "Signing in..." : "Sign in"}</Text>
-              </TouchableOpacity>
-            </View>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -178,6 +266,52 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
+  quickUserContainer: {
+    alignItems: "center",
+  },
+  avatarCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  avatarInitials: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: COLORS.white,
+  },
+  welcomeTitle: {
+    fontSize: 14,
+    color: COLORS.gray500,
+    fontWeight: "500",
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: COLORS.cardForeground,
+    marginTop: 2,
+  },
+  roleBadge: {
+    backgroundColor: COLORS.secondary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 6,
+    marginBottom: 20,
+  },
+  roleBadgeText: {
+    color: COLORS.primaryDark,
+    fontSize: 12,
+    fontWeight: "700",
+  },
   cardTitle: {
     fontSize: 22,
     fontWeight: "700",
@@ -189,7 +323,7 @@ const styles = StyleSheet.create({
     color: COLORS.mutedForeground,
     marginBottom: 24,
   },
-  form: {},
+  form: { width: "100%" },
   fieldGroup: { marginBottom: 16 },
   label: {
     fontSize: 13,
@@ -197,6 +331,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray700,
     marginBottom: 6,
     letterSpacing: 0.3,
+    textAlign: "center",
   },
   input: {
     borderWidth: 1.5,
@@ -217,13 +352,14 @@ const styles = StyleSheet.create({
     letterSpacing: 12,
     backgroundColor: COLORS.gray50,
     color: COLORS.cardForeground,
+    fontVariant: ["tabular-nums"],
   },
   button: {
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 24,
+    marginTop: 16,
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -236,5 +372,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+  switchUserBtn: {
+    marginTop: 16,
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  switchUserText: {
+    color: COLORS.gray500,
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

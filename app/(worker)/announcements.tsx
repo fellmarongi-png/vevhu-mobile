@@ -111,6 +111,10 @@ export default function AnnouncementsScreen() {
         <FlatList
           data={announcements}
           keyExtractor={(item) => item.id}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          initialNumToRender={8}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
             const read = isReadByUser(item.is_read_by, userId);

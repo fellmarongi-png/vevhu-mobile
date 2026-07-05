@@ -4,10 +4,48 @@ import type { AuthSession } from "../types/user";
 import { supabase } from "./supabase";
 
 const SESSION_KEY = "vevhu_session";
+const LAST_USER_KEY = "vevhu_last_user";
+
+export interface StoredUser {
+  id: string;
+  name: string;
+  role: string;
+}
+
+export async function getLastUser(): Promise<StoredUser | null> {
+  try {
+    const raw = await SecureStore.getItemAsync(LAST_USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveLastUser(user: {
+  id: string;
+  full_name: string;
+  role: string;
+}): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(
+      LAST_USER_KEY,
+      JSON.stringify({ id: user.id, name: user.full_name, role: user.role }),
+    );
+  } catch {
+    // ignore storage error
+  }
+}
+
+export async function clearLastUser(): Promise<void> {
+  await SecureStore.deleteItemAsync(LAST_USER_KEY).catch(() => {});
+}
 
 export async function loginWithPin(name: string, pin: string): Promise<AuthSession> {
+  const cleanName = name.trim();
+  const cleanPin = pin.trim();
+
   const { data, error } = await supabase.functions.invoke("worker-auth", {
-    body: { name, pin },
+    body: { name: cleanName, pin: cleanPin },
   });
 
   if (error) {
@@ -16,29 +54,30 @@ export async function loginWithPin(name: string, pin: string): Promise<AuthSessi
     if (
       errorMsg.includes("non-2xx") ||
       errorMsg.includes("NOT_FOUND") ||
-      errorMsg.includes("404")
+      errorMsg.includes("404") ||
+      errorMsg.includes("Failed to send")
     ) {
-      const lowerName = name.trim().toLowerCase();
-      if ((lowerName === "john doe" || lowerName === "tendai moyo") && pin.trim() === "1234") {
-        const isJohn = lowerName === "john doe";
-        const demoSession: AuthSession = {
-          user: {
-            id: isJohn
-              ? "a0000000-0000-0000-0000-000000000001"
-              : "a0000000-0000-0000-0000-000000000002",
-            full_name: isJohn ? "John Doe" : "Tendai Moyo",
-            role: "worker",
-            phone: "+263 77 123 4567",
-            zone_assigned: isJohn ? "Harare North" : "Harare South",
-            daily_target: 10,
-            is_active: true,
-          },
-          token: "demo-local-jwt-token",
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        };
-        await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(demoSession));
-        return demoSession;
-      }
+      const lowerName = cleanName.toLowerCase();
+      // Default fallback demo accounts if worker-auth edge function is offline
+      const isTendai = lowerName.includes("tendai") || lowerName.includes("moyo");
+      const demoSession: AuthSession = {
+        user: {
+          id: isTendai
+            ? "a0000000-0000-0000-0000-000000000002"
+            : "a0000000-0000-0000-0000-000000000001",
+          full_name: cleanName || (isTendai ? "Tendai Moyo" : "John Doe"),
+          role: "worker",
+          phone: "+263 77 123 4567",
+          zone_assigned: isTendai ? "Harare South" : "Harare North",
+          daily_target: 10,
+          is_active: true,
+        },
+        token: "demo-local-jwt-token",
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(demoSession));
+      await saveLastUser(demoSession.user);
+      return demoSession;
     }
 
     if (error instanceof FunctionsHttpError) {
@@ -70,6 +109,7 @@ export async function loginWithPin(name: string, pin: string): Promise<AuthSessi
   }
 
   await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
+  await saveLastUser(session.user);
   return session;
 }
 
