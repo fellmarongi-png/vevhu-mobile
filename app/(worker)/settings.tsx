@@ -94,6 +94,7 @@ const settingsGroups: SettingItem[][] = [
 ];
 
 import { router } from "expo-router";
+import { UpdateBanner } from "../../src/components/sync/UpdateBanner";
 import { useAuth } from "../../src/hooks/useAuth";
 import { logout } from "../../src/services/auth";
 
@@ -181,6 +182,11 @@ export default function SettingsScreen() {
           </View>
         ))}
 
+        {/* OTA Update Banner */}
+        <View style={styles.updateBannerContainer}>
+          <UpdateBanner />
+        </View>
+
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
           <Text style={styles.logoutText}>Logout</Text>
@@ -267,6 +273,10 @@ const styles = StyleSheet.create({
   },
   logoutButtonPressed: { opacity: 0.8 },
   logoutText: { fontSize: 16, fontWeight: "700", color: COLORS.error },
+  updateBannerContainer: {
+    marginHorizontal: 16,
+    marginTop: 12,
+  },
   footer: { paddingHorizontal: 16, paddingVertical: 24, alignItems: "center" },
   footerText: { fontSize: 12, color: COLORS.mutedForeground, marginBottom: 4 },
 });

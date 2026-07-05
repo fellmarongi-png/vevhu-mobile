@@ -74,6 +74,9 @@
         "expo-build-properties",
         {
           "android": {
+            "minSdkVersion": 33,
+            "targetSdkVersion": 35,
+            "compileSdkVersion": 35,
             "enableMinifyInReleaseBuilds": true,
             "enableProguardInReleaseBuilds": true,
             "shrinkResources": true,
@@ -87,7 +90,7 @@
     },
     "updates": {
       "enabled": true,
-      "checkAutomatically": "ON_LOAD",
+      "checkAutomatically": "NEVER",
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/f93d507d-89fd-44e0-9fda-8a0ec8d80768"
     },

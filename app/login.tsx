@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,7 +13,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { UpdateBanner } from "../src/components/sync/UpdateBanner";
 import { COLORS } from "../src/config/app";
 import { loginWithPin } from "../src/services/auth";
 
@@ -61,12 +61,15 @@ export default function LoginScreen() {
         <View style={styles.cardContainer}>
           {/* Brand Header */}
           <View style={styles.header}>
-            <View style={styles.logoRing}>
-              <Text style={styles.logoText}>V</Text>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require("../assets/images/vevhu-icon.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
-            <Text style={styles.logo}>VEVHU</Text>
-            <Text style={styles.subtitle}>Field Worker</Text>
-            <UpdateBanner />
+            <Text style={styles.logo}>VEVHU RESOURCES</Text>
+            <Text style={styles.subtitle}>Land Verification Field System</Text>
           </View>
 
           {/* Login Card */}
@@ -129,33 +132,36 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   header: { alignItems: "center", marginBottom: 28 },
-  logoRing: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.primary,
+  logoContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
+    backgroundColor: COLORS.card,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 14,
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  logoText: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: COLORS.white,
+  logoImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
   },
   logo: {
-    fontSize: 36,
+    fontSize: 24,
     fontWeight: "800",
     color: COLORS.primary,
-    letterSpacing: 4,
+    letterSpacing: 3,
+    textAlign: "center",
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 13,
     color: COLORS.gray500,
     marginTop: 4,
     fontWeight: "500",
