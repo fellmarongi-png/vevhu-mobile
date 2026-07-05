@@ -41,69 +41,63 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
         for (const op of batch.crud) {
           const { table, op: opType, id, opData } = op;
 
-          try {
-            switch (opType) {
-              case UpdateType.PUT: {
-                const { error } = await (supabase as any)
-                  .from(table)
-                  .upsert({ id, ...opData }, { onConflict: "id" });
-                if (error) {
-                  console.error(
-                    `[PowerSync] PUT error on table ${table} (id ${id}):`,
-                    error.message,
+          switch (opType) {
+            case UpdateType.PUT: {
+              const { error } = await (supabase as any)
+                .from(table)
+                .upsert({ id, ...opData }, { onConflict: "id" });
+              if (error) {
+                console.error(`[PowerSync] PUT error on table ${table} (id ${id}):`, error.message);
+                // 23505 = unique constraint violation (duplicate), PGRST116 = single row error
+                if (error.code === "23505" || error.code === "PGRST116") {
+                  console.warn(
+                    `[PowerSync] Unique constraint/conflict resolved for ${table}:${id}`,
                   );
-                  if (error.code === "23505" || error.code === "PGRST116") break; // Conflict resolved/handled
-                  throw error;
+                  continue;
                 }
-                break;
+                throw new Error(`[PowerSync PUT ${table}:${id}] ${error.message}`);
               }
-
-              case UpdateType.PATCH: {
-                const { error } = await (supabase as any)
-                  .from(table)
-                  .update(opData as Record<string, any>)
-                  .eq("id", id);
-                if (error) {
-                  console.error(
-                    `[PowerSync] PATCH error on table ${table} (id ${id}):`,
-                    error.message,
-                  );
-                  throw error;
-                }
-                break;
-              }
-
-              case UpdateType.DELETE: {
-                const { error } = await (supabase as any).from(table).delete().eq("id", id);
-                if (error) {
-                  console.error(
-                    `[PowerSync] DELETE error on table ${table} (id ${id}):`,
-                    error.message,
-                  );
-                  throw error;
-                }
-                break;
-              }
-
-              default:
-                console.warn(
-                  `[PowerSync] Unknown op type "${opType}" for table "${table}" -- skipping`,
-                );
+              break;
             }
-          } catch (opErr: any) {
-            console.error(
-              `[PowerSync] Skipping unresolvable operation on ${table}:${id}`,
-              opErr?.message || opErr,
-            );
+
+            case UpdateType.PATCH: {
+              const { error } = await (supabase as any)
+                .from(table)
+                .update(opData as Record<string, any>)
+                .eq("id", id);
+              if (error) {
+                console.error(
+                  `[PowerSync] PATCH error on table ${table} (id ${id}):`,
+                  error.message,
+                );
+                throw new Error(`[PowerSync PATCH ${table}:${id}] ${error.message}`);
+              }
+              break;
+            }
+
+            case UpdateType.DELETE: {
+              const { error } = await (supabase as any).from(table).delete().eq("id", id);
+              if (error) {
+                console.error(
+                  `[PowerSync] DELETE error on table ${table} (id ${id}):`,
+                  error.message,
+                );
+                throw new Error(`[PowerSync DELETE ${table}:${id}] ${error.message}`);
+              }
+              break;
+            }
+
+            default:
+              console.warn(
+                `[PowerSync] Unknown op type "${opType}" for table "${table}" -- skipping`,
+              );
           }
         }
 
         await batch.complete();
       } catch (err) {
-        console.error("[PowerSync] uploadData batch error:", err);
-        // Force batch completion to avoid infinite queue locking on permanent local data format errors
-        await batch.complete().catch(() => {});
-        break;
+        console.error("[PowerSync] uploadData error during batch upload:", err);
+        throw err; // PowerSync will catch this and schedule a retry automatically
       }
     }
   }

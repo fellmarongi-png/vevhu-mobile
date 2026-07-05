@@ -1,4 +1,5 @@
 import * as FileSystem from "expo-file-system";
+import { Paths } from "expo-file-system";
 import { CONFIG } from "../config/app";
 import { supabase } from "./supabase";
 
@@ -9,31 +10,52 @@ export async function uploadFile(
   storagePath: string,
   contentType: string,
 ): Promise<string> {
-  // Get valid session access token
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const token = session?.access_token || CONFIG.SUPABASE_ANON_KEY;
+  let fileToUpload = localPath;
+  let isTempFile = false;
 
-  const targetUrl = `${CONFIG.SUPABASE_URL}/storage/v1/object/${BUCKET}/${storagePath}`;
-
-  // Use FileSystem.uploadAsync for zero-JS-memory native file streaming
-  const response = await FileSystem.uploadAsync(targetUrl, localPath, {
-    httpMethod: "POST",
-    uploadType: ((FileSystem as any).UploadType?.BINARY_CONTENT ?? 1) as any,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      apikey: CONFIG.SUPABASE_ANON_KEY,
-      "Content-Type": contentType,
-      "x-upsert": "true",
-    },
-  });
-
-  if (response.status < 200 || response.status >= 300) {
-    throw new Error(`Upload failed with status ${response.status}: ${response.body}`);
+  // Handle data URIs or base64 strings (e.g., resident signature captures)
+  if (localPath.startsWith("data:") || localPath.startsWith("base64,")) {
+    const base64Data = localPath.includes("base64,") ? localPath.split("base64,")[1] : localPath;
+    const tempFilename = `temp_sig_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`;
+    const cacheDir = Paths.cache.uri.endsWith("/") ? Paths.cache.uri : `${Paths.cache.uri}/`;
+    fileToUpload = `${cacheDir}${tempFilename}`;
+    await FileSystem.writeAsStringAsync(fileToUpload, base64Data, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    isTempFile = true;
   }
 
-  return storagePath;
+  try {
+    // Get valid session access token
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const token = session?.access_token || CONFIG.SUPABASE_ANON_KEY;
+
+    const targetUrl = `${CONFIG.SUPABASE_URL}/storage/v1/object/${BUCKET}/${storagePath}`;
+
+    // Use FileSystem.uploadAsync for native file streaming
+    const response = await FileSystem.uploadAsync(targetUrl, fileToUpload, {
+      httpMethod: "POST",
+      uploadType: ((FileSystem as any).UploadType?.BINARY_CONTENT ?? 1) as any,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: CONFIG.SUPABASE_ANON_KEY,
+        "Content-Type": contentType,
+        "x-upsert": "true",
+      },
+    });
+
+    if (response.status < 200 || response.status >= 300) {
+      throw new Error(`Upload failed with status ${response.status}: ${response.body}`);
+    }
+
+    return storagePath;
+  } finally {
+    if (isTempFile) {
+      await FileSystem.deleteAsync(fileToUpload, { idempotent: true }).catch(() => {});
+    }
+  }
 }
 
 export async function uploadSubmissionMedia(

@@ -98,8 +98,13 @@ export async function getStoredSession(): Promise<AuthSession | null> {
       error,
     } = await supabase.auth.getUser();
     if (error || !user) {
-      // If server check fails in demo mode, keep local session
-      if (session.token === "demo-local-jwt-token") {
+      const isNetworkErr =
+        error?.message?.toLowerCase().includes("fetch") ||
+        error?.message?.toLowerCase().includes("network") ||
+        error?.status === 0;
+
+      // If server check fails due to network/offline or demo mode, keep local session
+      if (session.token === "demo-local-jwt-token" || isNetworkErr) {
         return session;
       }
       await SecureStore.deleteItemAsync(SESSION_KEY);

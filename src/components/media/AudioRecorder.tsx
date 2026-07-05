@@ -23,7 +23,7 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
   const [savedDuration, setSavedDuration] = useState<number>(0);
 
   // Audio Player Preview for saved recordings
-  const player = useAudioPlayer(savedUri || "");
+  const player = useAudioPlayer(savedUri || null);
   const playerStatus = useAudioPlayerStatus(player);
 
   const handleStart = () => {

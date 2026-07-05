@@ -12,7 +12,6 @@ import { useLocation } from "../../src/hooks/useLocation";
 import { useWatchedQuery } from "../../src/hooks/usePowerSync";
 import { processMediaQueue } from "../../src/services/media-sync";
 import { db } from "../../src/services/powersync";
-import { supabase } from "../../src/services/supabase";
 import type { FormSchema } from "../../src/types/form";
 
 const DEFAULT_SCHEMA: FormSchema = {
@@ -233,7 +232,7 @@ export default function CollectScreen() {
             `INSERT INTO submissions (id, worker_id, form_schema_version, stand_number_official, stand_number_physical, respondent_type, respondent_name, respondent_phone, is_legal_owner, owner_name, owner_phone, account_standing, action_taken, field_notes, extra_fields, gps_latitude, gps_longitude, gps_accuracy, photos, audio_recording_key, audio_duration_seconds, signature_key, status, collected_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               submissionId,
-              user?.id || "",
+              user?.id || "a0000000-0000-0000-0000-000000000001",
               DEFAULT_SCHEMA.version,
               str(formData.stand_number_official),
               str(formData.stand_number_physical),
@@ -283,45 +282,6 @@ export default function CollectScreen() {
             );
           }
         });
-
-        // Immediate Supabase sync attempt so submission appears on dashboard instantly
-        try {
-          const submissionPayload = {
-            id: submissionId,
-            worker_id: user?.id || "a0000000-0000-0000-0000-000000000001",
-            form_schema_version: DEFAULT_SCHEMA.version,
-            stand_number_official: str(formData.stand_number_official),
-            stand_number_physical: str(formData.stand_number_physical),
-            respondent_type: str(formData.respondent_type),
-            respondent_name: str(formData.respondent_name),
-            respondent_phone: str(formData.respondent_phone),
-            is_legal_owner: boolToInt(formData.is_legal_owner),
-            owner_name: str(formData.owner_name),
-            owner_phone: str(formData.owner_phone),
-            account_standing: str(formData.account_standing),
-            action_taken: str(formData.action_taken),
-            field_notes: str(formData.field_notes),
-            extra_fields: extraFields,
-            gps_latitude: gps?.latitude ?? null,
-            gps_longitude: gps?.longitude ?? null,
-            gps_accuracy: gps?.accuracy ?? null,
-            photos: photosPayload,
-            status: "synced",
-            collected_at: now,
-          };
-
-          const { error: syncErr } = await (supabase as any)
-            .from("submissions")
-            .upsert(submissionPayload);
-          if (!syncErr) {
-            await db.execute(
-              "UPDATE submissions SET status = 'synced', synced_at = ? WHERE id = ?",
-              [now, submissionId],
-            );
-          }
-        } catch (syncError) {
-          console.log("[Collect] Record saved locally, will sync when online:", syncError);
-        }
 
         // Trigger immediate background processing of queued media files
         processMediaQueue().catch((err) =>

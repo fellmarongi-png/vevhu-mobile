@@ -94,9 +94,19 @@ const settingsGroups: SettingItem[][] = [
 ];
 
 import { router } from "expo-router";
+import { useAuth } from "../../src/hooks/useAuth";
 import { logout } from "../../src/services/auth";
 
 export default function SettingsScreen() {
+  const { user } = useAuth();
+  const userName = user?.full_name || "Field Agent";
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   const handleLogout = () => {
     Alert.alert(
       "Logout",
@@ -128,11 +138,11 @@ export default function SettingsScreen() {
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>JC</Text>
+            <Text style={styles.avatarText}>{userInitials || "FA"}</Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>John Chipunza</Text>
-            <Text style={styles.profileRole}>Field Agent</Text>
+            <Text style={styles.profileName}>{userName}</Text>
+            <Text style={styles.profileRole}>{user?.role || "Field Agent"}</Text>
           </View>
           <TouchableOpacity style={styles.editButton}>
             <Text style={styles.editButtonText}>Edit</Text>
