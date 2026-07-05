@@ -51,14 +51,15 @@ serve(async (req) => {
       .select(`
         id,
         worker_id,
-        zone,
         status,
-        photo_urls,
-        audio_url,
-        is_flagged,
+        photos,
+        audio_recording_key,
+        signature_key,
+        flagged_reason,
         created_at,
         users!submissions_worker_id_fkey (
-          full_name
+          full_name,
+          zone_assigned
         )
       `)
       .gte("created_at", todayStart.toISOString())
@@ -74,6 +75,7 @@ serve(async (req) => {
     for (const sub of submissions || []) {
       const workerId = sub.worker_id;
       const workerName = (sub as any).users?.full_name || workerId;
+      const workerZone = (sub as any).users?.zone_assigned || "Unassigned";
 
       if (!workerMap.has(workerId)) {
         workerMap.set(workerId, {
@@ -91,16 +93,16 @@ serve(async (req) => {
       const stats = workerMap.get(workerId)!;
       stats.total += 1;
 
-      const photoUrls = sub.photo_urls;
-      if (photoUrls && (Array.isArray(photoUrls) ? photoUrls.length > 0 : photoUrls)) {
+      const photos = sub.photos;
+      if (photos && (Array.isArray(photos) ? photos.length > 0 : Boolean(photos))) {
         stats.with_photos += 1;
       }
 
-      if (sub.audio_url) {
+      if (sub.audio_recording_key) {
         stats.with_audio += 1;
       }
 
-      if (sub.is_flagged) {
+      if (sub.flagged_reason || sub.status === "flagged") {
         stats.flagged += 1;
       }
 
@@ -108,32 +110,29 @@ serve(async (req) => {
         stats.by_status[sub.status] = (stats.by_status[sub.status] || 0) + 1;
       }
 
-      if (sub.zone) {
-        stats.by_zone[sub.zone] = (stats.by_zone[sub.zone] || 0) + 1;
+      if (workerZone) {
+        stats.by_zone[workerZone] = (stats.by_zone[workerZone] || 0) + 1;
       }
     }
 
     const workerStats = Array.from(workerMap.values());
 
-    // Upsert into daily_summaries table
+    // Upsert into daily_summaries table (matching 001_initial.sql schema)
     const upsertRows = workerStats.map((stats) => ({
-      summary_date: summaryDate,
+      date: summaryDate,
       worker_id: stats.worker_id,
-      worker_name: stats.worker_name,
-      total_submissions: stats.total,
-      with_photos: stats.with_photos,
-      with_audio: stats.with_audio,
-      flagged_count: stats.flagged,
-      by_status: stats.by_status,
-      by_zone: stats.by_zone,
-      generated_at: now.toISOString(),
+      total_records: stats.total,
+      records_with_photos: stats.with_photos,
+      records_with_audio: stats.with_audio,
+      records_flagged: stats.flagged,
+      created_at: now.toISOString(),
     }));
 
     if (upsertRows.length > 0) {
       const { error: upsertError } = await adminClient
         .from("daily_summaries")
         .upsert(upsertRows, {
-          onConflict: "summary_date,worker_id",
+          onConflict: "date,worker_id",
           ignoreDuplicates: false,
         });
 

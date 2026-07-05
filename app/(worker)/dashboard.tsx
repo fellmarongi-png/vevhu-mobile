@@ -1,8 +1,11 @@
 // ---------------------------------------------------------------------------
-// Vevhu Field - Admin Dashboard Screen
+// Vevhu Field - Mobile Dashboard Screen
 // ---------------------------------------------------------------------------
 
-import { useState } from "react";
+import { useQuery } from "@powersync/react-native";
+import { format, formatISO, startOfDay } from "date-fns";
+import { router } from "expo-router";
+import { useMemo } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -18,10 +21,36 @@ import { SubmissionCard } from "../../src/components/dashboard/SubmissionCard";
 import { SyncBanner } from "../../src/components/dashboard/SyncBanner";
 import { WorkerPerformanceTable } from "../../src/components/dashboard/WorkerPerformanceTable";
 import { COLORS } from "../../src/config/app";
+import { useAuth } from "../../src/hooks/useAuth";
+import { useSyncStatus } from "../../src/hooks/useSyncStatus";
+import { forceSync } from "../../src/services/sync";
 import type { ActivityItem, KPI, Submission, Worker } from "../../src/types/dashboard";
 
-// Mock data for demonstration
-const mockWorkers: Worker[] = [
+interface SubmissionRow {
+  id: string;
+  worker_id: string;
+  stand_number_official: string | null;
+  stand_number_physical: string | null;
+  respondent_name: string | null;
+  respondent_phone: string | null;
+  respondent_type: string | null;
+  status: string;
+  collected_at: string;
+  photos: string | null;
+  audio_recording_key: string | null;
+  signature_key: string | null;
+  worker_name?: string | null;
+}
+
+interface WorkerRow {
+  id: string;
+  full_name: string;
+  email: string | null;
+  role: string | null;
+  is_active: number | null;
+}
+
+const FALLBACK_WORKERS: Worker[] = [
   {
     id: "1",
     name: "John Chipunza",
@@ -46,141 +75,156 @@ const mockWorkers: Worker[] = [
     syncRate: 95,
     lastActive: "5m ago",
   },
-  {
-    id: "3",
-    name: "Robert Zulu",
-    email: "robert@vevhu.com",
-    role: "Field Agent",
-    status: "idle",
-    todayCount: 4,
-    weeklyTotal: 62,
-    dailyTarget: 30,
-    syncRate: 88,
-    lastActive: "1h ago",
-  },
-  {
-    id: "4",
-    name: "Tinashe Moyo",
-    email: "tinashe@vevhu.com",
-    role: "Team Lead",
-    status: "offline",
-    todayCount: 0,
-    weeklyTotal: 51,
-    dailyTarget: 30,
-    syncRate: 92,
-    lastActive: "Yesterday",
-  },
-];
-
-const mockSubmissions: Submission[] = [
-  {
-    id: "1",
-    standNumber: "841",
-    respondentName: "Kudzai Musona",
-    respondentPhone: "+263 77 123 4567",
-    respondentType: "Registered Owner",
-    workerId: "1",
-    workerName: "John Chipunza",
-    status: "synced",
-    collectedAt: "2024-01-15T10:30:00Z",
-    photos: 3,
-    hasAudio: true,
-    hasSignature: true,
-  },
-  {
-    id: "2",
-    standNumber: "1202",
-    respondentName: "Tafadzwa Gumbo",
-    respondentPhone: "+263 77 234 5678",
-    respondentType: "Tenant",
-    workerId: "2",
-    workerName: "Sarah Mnene",
-    status: "synced",
-    collectedAt: "2024-01-15T09:15:00Z",
-    photos: 5,
-    hasAudio: false,
-    hasSignature: true,
-  },
-  {
-    id: "3",
-    standNumber: "33",
-    respondentName: "Bester Phiri",
-    respondentPhone: "+263 77 345 6789",
-    respondentType: "Caretaker",
-    workerId: "3",
-    workerName: "Robert Zulu",
-    status: "pending",
-    collectedAt: "2024-01-15T08:45:00Z",
-    photos: 2,
-    hasAudio: true,
-    hasSignature: true,
-  },
-];
-
-const mockActivities: ActivityItem[] = [
-  {
-    id: "1",
-    workerName: "John C.",
-    workerInitials: "JC",
-    action: "submitted",
-    standNumber: "Stand 402",
-    timestamp: "2 minutes ago",
-    type: "submission",
-    color: COLORS.primary,
-  },
-  {
-    id: "2",
-    workerName: "Mary M.",
-    workerInitials: "MM",
-    action: "started",
-    standNumber: "Stand 12",
-    timestamp: "15 minutes ago",
-    type: "start",
-    color: COLORS.primary,
-  },
-  {
-    id: "3",
-    workerName: "System",
-    workerInitials: "SY",
-    action: "auto-verified",
-    standNumber: "Batch #92",
-    timestamp: "1 hour ago",
-    type: "verification",
-    color: COLORS.success,
-  },
-  {
-    id: "4",
-    workerName: "Robert Z.",
-    workerInitials: "RZ",
-    action: "flagged",
-    standNumber: "Stand 84",
-    timestamp: "2 hours ago",
-    type: "flag",
-    color: COLORS.warning,
-  },
-];
-
-const mockKPIs: KPI[] = [
-  { label: "Total Submissions", value: "142", trend: "12%", trendUp: true },
-  { label: "Daily Target", value: "140/200", trend: "70%", trendUp: true },
-  { label: "Pending Syncs", value: "5", trend: "3", trendUp: false },
-  { label: "Active Workers", value: "24", trend: "Live", trendUp: true },
 ];
 
 export default function DashboardScreen() {
-  const [pendingSyncCount] = useState(5);
+  const { user } = useAuth();
+  const syncStatus = useSyncStatus();
 
-  const handleSync = () => {
-    console.log("Syncing...");
+  const todayStart = formatISO(startOfDay(new Date()), { representation: "date" });
+
+  const { data: totalSubmissions } = useQuery<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM submissions",
+  );
+
+  const { data: todaySubmissions } = useQuery<{ count: number }>(
+    "SELECT COUNT(*) AS count FROM submissions WHERE collected_at >= ?",
+    [todayStart],
+  );
+
+  const { data: recentDbSubmissions } = useQuery<SubmissionRow>(
+    `SELECT s.*, u.full_name AS worker_name FROM submissions s LEFT JOIN users u ON s.worker_id = u.id ORDER BY s.collected_at DESC LIMIT 10`,
+  );
+
+  const { data: dbWorkers } = useQuery<WorkerRow>(
+    "SELECT * FROM users WHERE role = 'worker' OR role IS NULL LIMIT 20",
+  );
+
+  const pendingSyncCount = syncStatus.pendingSubmissions + syncStatus.pendingMedia;
+
+  const handleSync = async () => {
+    try {
+      await forceSync();
+    } catch (err) {
+      console.warn("[Dashboard] Sync error:", err);
+    }
   };
 
   const handleViewAllWorkers = () => {
-    console.log("View all workers");
+    router.push("/(worker)/workers" as any);
   };
 
   const handleViewSubmission = (submission: Submission) => {
-    console.log("View submission:", submission.id);
+    router.push({ pathname: "/(worker)/submission-detail" as any, params: { id: submission.id } });
   };
+
+  const activeKPIs: KPI[] = useMemo(() => {
+    const totalCount = totalSubmissions?.[0]?.count ?? 0;
+    const todayCount = todaySubmissions?.[0]?.count ?? 0;
+    return [
+      { label: "Total Submissions", value: totalCount.toString(), trend: "Live", trendUp: true },
+      { label: "Daily Submissions", value: todayCount.toString(), trend: "Today", trendUp: true },
+      {
+        label: "Pending Syncs",
+        value: pendingSyncCount.toString(),
+        trend: syncStatus.isConnected ? "Online" : "Offline",
+        trendUp: syncStatus.isConnected,
+      },
+      {
+        label: "Network",
+        value: syncStatus.isConnected ? "Connected" : "Offline",
+        trend: "Status",
+        trendUp: syncStatus.isConnected,
+      },
+    ];
+  }, [totalSubmissions, todaySubmissions, pendingSyncCount, syncStatus.isConnected]);
+
+  const submissionsList: Submission[] = useMemo(() => {
+    if (recentDbSubmissions && recentDbSubmissions.length > 0) {
+      return recentDbSubmissions.map((row) => {
+        let photoCount = 0;
+        try {
+          if (row.photos) photoCount = JSON.parse(row.photos).length;
+        } catch {}
+
+        return {
+          id: row.id,
+          standNumber: row.stand_number_official || row.stand_number_physical || "Unnumbered",
+          respondentName: row.respondent_name || "Respondent",
+          respondentPhone: row.respondent_phone || "No phone",
+          respondentType: (row.respondent_type as any) || "Resident",
+          workerId: row.worker_id,
+          workerName: row.worker_name || "Field Agent",
+          status: (row.status as any) || "pending",
+          collectedAt: row.collected_at,
+          photos: photoCount,
+          hasAudio: !!row.audio_recording_key,
+          hasSignature: !!row.signature_key,
+        };
+      });
+    }
+
+    return [
+      {
+        id: "demo-1",
+        standNumber: "841",
+        respondentName: "Kudzai Musona",
+        respondentPhone: "+263 77 123 4567",
+        respondentType: "Registered Owner",
+        workerId: "1",
+        workerName: "John Chipunza",
+        status: "synced",
+        collectedAt: new Date().toISOString(),
+        photos: 2,
+        hasAudio: true,
+        hasSignature: true,
+      },
+    ];
+  }, [recentDbSubmissions]);
+
+  const workersList: Worker[] = useMemo(() => {
+    if (dbWorkers && dbWorkers.length > 0) {
+      return dbWorkers.map((w) => ({
+        id: w.id,
+        name: w.full_name || "Agent",
+        email: w.email || "agent@vevhu.com",
+        role: (w.role as Worker["role"]) || "Field Agent",
+        status: w.is_active === 1 ? "active" : "idle",
+        todayCount: 0,
+        weeklyTotal: 0,
+        dailyTarget: 30,
+        syncRate: 100,
+        lastActive: "Just now",
+      }));
+    }
+    return FALLBACK_WORKERS;
+  }, [dbWorkers]);
+
+  const mockActivities: ActivityItem[] = useMemo(
+    () => [
+      {
+        id: "act-1",
+        workerName: user?.full_name || "Field Agent",
+        workerInitials: (user?.full_name || "FA").slice(0, 2).toUpperCase(),
+        action: "active in field",
+        standNumber: "Zone Harare East",
+        timestamp: "Just now",
+        type: "submission",
+        color: COLORS.primary,
+      },
+      {
+        id: "act-2",
+        workerName: "System Sync",
+        workerInitials: "SY",
+        action: "powerSync connection active",
+        standNumber: syncStatus.isConnected ? "Online" : "Offline local",
+        timestamp: "1 minute ago",
+        type: "verification",
+        color: COLORS.success,
+      },
+    ],
+    [user, syncStatus.isConnected],
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -192,31 +236,27 @@ export default function DashboardScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Good morning, Admin</Text>
-            <Text style={styles.dateText}>
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </Text>
+            <Text style={styles.greeting}>Good day, {user?.full_name || "Agent"}</Text>
+            <Text style={styles.dateText}>{format(new Date(), "EEEE, MMMM d, yyyy")}</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => router.push("/(worker)/announcements")}
+          >
             <Text style={styles.notificationIcon}>🔔</Text>
-            <View style={styles.notificationBadge} />
           </TouchableOpacity>
         </View>
 
         {/* KPI Cards */}
         <View style={styles.kpiRow}>
-          {mockKPIs.map((kpi) => (
+          {activeKPIs.map((kpi) => (
             <KPICard key={kpi.label} kpi={kpi} />
           ))}
         </View>
 
         {/* Worker Performance & Activity */}
         <View style={styles.middleSection}>
-          <WorkerPerformanceTable workers={mockWorkers} onViewAll={handleViewAllWorkers} />
+          <WorkerPerformanceTable workers={workersList} onViewAll={handleViewAllWorkers} />
           <View style={styles.activityTimeline}>
             <ActivityTimeline activities={mockActivities} />
           </View>
@@ -225,15 +265,13 @@ export default function DashboardScreen() {
         {/* Recent Submissions */}
         <View style={styles.submissionsSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Submissions</Text>
-            <View style={styles.filterButtons}>
-              <TouchableOpacity style={styles.filterButton}>
-                <Text style={styles.filterIcon}>🔍</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.filterButton}>
-                <Text style={styles.filterIcon}>↕️</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.sectionTitle}>Recent Field Submissions</Text>
+            <TouchableOpacity
+              style={styles.viewAllBtn}
+              onPress={() => router.push("/(worker)/submissions" as any)}
+            >
+              <Text style={styles.viewAllBtnText}>View All →</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView
@@ -241,7 +279,7 @@ export default function DashboardScreen() {
             showsHorizontalScrollIndicator={false}
             style={styles.submissionsScroll}
           >
-            {mockSubmissions.map((submission) => (
+            {submissionsList.map((submission) => (
               <View key={submission.id} style={styles.submissionCardWrapper}>
                 <SubmissionCard
                   submission={submission}
@@ -254,18 +292,7 @@ export default function DashboardScreen() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© 2024 Vevhu Resources</Text>
-          <View style={styles.footerLinks}>
-            <TouchableOpacity>
-              <Text style={styles.footerLink}>System Status</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text style={styles.footerLink}>Help Center</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text style={styles.footerLink}>API Logs</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.footerText}>© 2026 Vevhu Resources</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -273,13 +300,8 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scrollView: { flex: 1 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -290,32 +312,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  greeting: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: COLORS.cardForeground,
-  },
-  dateText: {
-    fontSize: 13,
-    color: COLORS.mutedForeground,
-    marginTop: 2,
-  },
-  notificationButton: {
-    position: "relative",
-    padding: 8,
-  },
-  notificationIcon: {
-    fontSize: 20,
-  },
-  notificationBadge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.error,
-  },
+  greeting: { fontSize: 20, fontWeight: "700", color: COLORS.cardForeground },
+  dateText: { fontSize: 13, color: COLORS.mutedForeground, marginTop: 2 },
+  notificationButton: { padding: 8 },
+  notificationIcon: { fontSize: 20 },
   kpiRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -323,70 +323,27 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     gap: 12,
   },
-  middleSection: {
-    paddingHorizontal: 16,
-    gap: 16,
-    marginBottom: 16,
-  },
-  activityTimeline: {
-    flex: 1,
-  },
-  submissionsSection: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
+  middleSection: { paddingHorizontal: 16, gap: 16, marginBottom: 16 },
+  activityTimeline: { flex: 1 },
+  submissionsSection: { paddingHorizontal: 16, marginBottom: 24 },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: COLORS.cardForeground,
-  },
-  filterButtons: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  filterButton: {
-    padding: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 8,
-  },
-  filterIcon: {
-    fontSize: 16,
-  },
-  submissionsScroll: {
-    marginBottom: -16,
-  },
-  submissionCardWrapper: {
-    width: 280,
-    marginRight: 12,
-  },
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: COLORS.cardForeground },
+  viewAllBtn: { paddingVertical: 4, paddingHorizontal: 8 },
+  viewAllBtnText: { fontSize: 13, fontWeight: "600", color: COLORS.primary },
+  submissionsScroll: { marginBottom: 0 },
+  submissionCardWrapper: { width: 280, marginRight: 12 },
   footer: {
     paddingHorizontal: 16,
     paddingVertical: 24,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     backgroundColor: COLORS.gray50,
+    alignItems: "center",
   },
-  footerText: {
-    fontSize: 12,
-    color: COLORS.mutedForeground,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  footerLinks: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-  },
-  footerLink: {
-    fontSize: 12,
-    color: COLORS.primary,
-    fontWeight: "500",
-  },
+  footerText: { fontSize: 12, color: COLORS.mutedForeground },
 });

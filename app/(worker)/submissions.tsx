@@ -2,11 +2,13 @@
 // Vevhu Field - Submissions List Screen
 // ---------------------------------------------------------------------------
 
-import { useState } from "react";
+import { useQuery } from "@powersync/react-native";
+import { format } from "date-fns";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
 import {
   FlatList,
   SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -15,114 +17,77 @@ import {
   View,
 } from "react-native";
 import { COLORS } from "../../src/config/app";
-import type { Submission } from "../../src/types/dashboard";
 
-// Mock data
-const mockSubmissions: Submission[] = [
+interface SubmissionRow {
+  id: string;
+  worker_id: string;
+  stand_number_official: string | null;
+  stand_number_physical: string | null;
+  respondent_type: string | null;
+  respondent_name: string | null;
+  respondent_phone: string | null;
+  status: string;
+  collected_at: string;
+  photos: string | null;
+  audio_recording_key: string | null;
+  signature_key: string | null;
+  worker_name?: string | null;
+}
+
+const FALLBACK_SUBMISSIONS: SubmissionRow[] = [
   {
-    id: "1",
-    standNumber: "841",
-    respondentName: "Kudzai Musona",
-    respondentPhone: "+263 77 123 4567",
-    respondentType: "Registered Owner",
-    workerId: "1",
-    workerName: "John Chipunza",
+    id: "demo-1",
+    worker_id: "w1",
+    stand_number_official: "841",
+    stand_number_physical: "841-A",
+    respondent_type: "Registered Owner",
+    respondent_name: "Kudzai Musona",
+    respondent_phone: "+263 77 123 4567",
     status: "synced",
-    collectedAt: "2024-01-15T10:30:00Z",
-    photos: 3,
-    hasAudio: true,
-    hasSignature: true,
+    collected_at: new Date().toISOString(),
+    photos: JSON.stringify([{ uri: "sample1" }, { uri: "sample2" }]),
+    audio_recording_key: "sample.m4a",
+    signature_key: "sample.png",
+    worker_name: "John Chipunza",
   },
   {
-    id: "2",
-    standNumber: "1202",
-    respondentName: "Tafadzwa Gumbo",
-    respondentPhone: "+263 77 234 5678",
-    respondentType: "Tenant",
-    workerId: "2",
-    workerName: "Sarah Mnene",
-    status: "synced",
-    collectedAt: "2024-01-15T09:15:00Z",
-    photos: 5,
-    hasAudio: false,
-    hasSignature: true,
-  },
-  {
-    id: "3",
-    standNumber: "33",
-    respondentName: "Bester Phiri",
-    respondentPhone: "+263 77 345 6789",
-    respondentType: "Caretaker",
-    workerId: "3",
-    workerName: "Robert Zulu",
+    id: "demo-2",
+    worker_id: "w2",
+    stand_number_official: "1202",
+    stand_number_physical: "1202",
+    respondent_type: "Tenant",
+    respondent_name: "Tafadzwa Gumbo",
+    respondent_phone: "+263 77 234 5678",
     status: "pending",
-    collectedAt: "2024-01-15T08:45:00Z",
-    photos: 2,
-    hasAudio: true,
-    hasSignature: true,
-  },
-  {
-    id: "4",
-    standNumber: "567",
-    respondentName: "Chipo Moyo",
-    respondentPhone: "+263 77 456 7890",
-    respondentType: "Registered Owner",
-    workerId: "1",
-    workerName: "John Chipunza",
-    status: "synced",
-    collectedAt: "2024-01-14T16:20:00Z",
-    photos: 4,
-    hasAudio: true,
-    hasSignature: false,
-  },
-  {
-    id: "5",
-    standNumber: "89",
-    respondentName: "Tendai Mutasa",
-    respondentPhone: "+263 77 567 8901",
-    respondentType: "Squatter",
-    workerId: "4",
-    workerName: "Tinashe Moyo",
-    status: "flagged",
-    collectedAt: "2024-01-14T14:10:00Z",
-    photos: 1,
-    hasAudio: false,
-    hasSignature: false,
-  },
-  {
-    id: "6",
-    standNumber: "1024",
-    respondentName: "Rumbi Chikwanha",
-    respondentPhone: "+263 77 678 9012",
-    respondentType: "Tenant",
-    workerId: "2",
-    workerName: "Sarah Mnene",
-    status: "synced",
-    collectedAt: "2024-01-14T11:45:00Z",
-    photos: 3,
-    hasAudio: true,
-    hasSignature: true,
+    collected_at: new Date(Date.now() - 3600000).toISOString(),
+    photos: JSON.stringify([{ uri: "sample1" }]),
+    audio_recording_key: null,
+    signature_key: "sample.png",
+    worker_name: "Sarah Mnene",
   },
 ];
 
 function formatDate(dateStr: string) {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  try {
+    return format(new Date(dateStr), "MMM d, h:mm a");
+  } catch {
+    return dateStr;
+  }
 }
 
-function getStatusBadge(status: Submission["status"]) {
+function getStatusBadge(status: string) {
   switch (status) {
     case "synced":
+    case "complete":
       return { text: "Synced", style: styles.syncedBadge, textStyle: styles.syncedText };
     case "pending":
       return { text: "Pending", style: styles.pendingBadge, textStyle: styles.pendingText };
     case "flagged":
       return { text: "Flagged", style: styles.flaggedBadge, textStyle: styles.flaggedText };
+    case "disputed":
+      return { text: "Disputed", style: styles.disputedBadge, textStyle: styles.disputedText };
+    default:
+      return { text: status, style: styles.pendingBadge, textStyle: styles.pendingText };
   }
 }
 
@@ -130,104 +95,155 @@ export default function SubmissionsScreen() {
   const [filter, setFilter] = useState<"all" | "synced" | "pending" | "flagged">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredSubmissions = mockSubmissions.filter((submission) => {
-    const matchesFilter = filter === "all" || submission.status === filter;
-    const matchesSearch =
-      submission.standNumber.includes(searchQuery) ||
-      submission.respondentName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+  const { data: queryData } = useQuery<SubmissionRow>(
+    `SELECT s.*, u.full_name AS worker_name FROM submissions s LEFT JOIN users u ON s.worker_id = u.id ORDER BY s.collected_at DESC LIMIT 100`,
+  );
+
+  const submissionsList = useMemo(() => {
+    if (queryData && queryData.length > 0) return queryData;
+    return FALLBACK_SUBMISSIONS;
+  }, [queryData]);
+
+  const filteredSubmissions = useMemo(() => {
+    return submissionsList.filter((item) => {
+      const matchesFilter =
+        filter === "all" ||
+        item.status === filter ||
+        (filter === "synced" && item.status === "complete");
+      const q = searchQuery.toLowerCase().trim();
+      const standStr = (
+        item.stand_number_official ||
+        item.stand_number_physical ||
+        ""
+      ).toLowerCase();
+      const respName = (item.respondent_name || "").toLowerCase();
+      const matchesSearch = !q || standStr.includes(q) || respName.includes(q);
+      return matchesFilter && matchesSearch;
+    });
+  }, [submissionsList, filter, searchQuery]);
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
           <Text style={styles.title}>Submissions</Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterIcon}>🔍</Text>
+          <Text style={styles.subtitle}>
+            {filteredSubmissions.length} record{filteredSubmissions.length === 1 ? "" : "s"}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.filterButton}>
+          <Text style={styles.filterIcon}>🔍</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Filter Chips */}
+      <View style={styles.filterRow}>
+        {(["all", "synced", "pending", "flagged"] as const).map((f) => (
+          <TouchableOpacity
+            key={f}
+            style={[styles.filterChip, filter === f && styles.filterChipActive]}
+            onPress={() => setFilter(f)}
+          >
+            <Text style={[styles.filterChipText, filter === f && styles.filterChipTextActive]}>
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </Text>
           </TouchableOpacity>
-        </View>
+        ))}
+      </View>
 
-        {/* Filter Chips */}
-        <View style={styles.filterRow}>
-          {(["all", "synced", "pending", "flagged"] as const).map((f) => (
-            <TouchableOpacity
-              key={f}
-              style={[styles.filterChip, filter === f && styles.filterChipActive]}
-              onPress={() => setFilter(f)}
-            >
-              <Text style={[styles.filterChipText, filter === f && styles.filterChipTextActive]}>
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by stand # or respondent..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor={COLORS.gray400}
-          />
-        </View>
-
-        {/* Submissions List */}
-        <FlatList
-          data={filteredSubmissions}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => {
-            const status = getStatusBadge(item.status);
-            return (
-              <TouchableOpacity style={styles.submissionCard} activeOpacity={0.7}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.standNumber}>Stand {item.standNumber}</Text>
-                  <View style={[styles.statusBadge, status.style]}>
-                    <Text style={[styles.statusText, status.textStyle]}>{status.text}</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.respondentName}>{item.respondentName}</Text>
-                <Text style={styles.respondentPhone}>{item.respondentPhone}</Text>
-
-                <Text style={styles.workerInfo}>
-                  Collected by <Text style={styles.bold}>{item.workerName}</Text> •{" "}
-                  {formatDate(item.collectedAt)}
-                </Text>
-
-                <View style={styles.mediaPills}>
-                  {item.photos > 0 && <Text style={styles.mediaPill}>📷 {item.photos}</Text>}
-                  {item.hasAudio && <Text style={styles.mediaPill}>🎙️</Text>}
-                  {item.hasSignature && <Text style={styles.mediaPill}>✍️</Text>}
-                </View>
-              </TouchableOpacity>
-            );
-          }}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
+      {/* Search Bar */}
+      <View style={styles.searchBar}>
+        <Text style={styles.searchIcon}>🔍</Text>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by stand # or respondent..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor={COLORS.gray400}
         />
-      </ScrollView>
+      </View>
+
+      {/* Submissions List (Direct FlatList without outer ScrollView) */}
+      <FlatList
+        data={filteredSubmissions}
+        keyExtractor={(item) => item.id}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        initialNumToRender={8}
+        renderItem={({ item }) => {
+          const status = getStatusBadge(item.status);
+          let photoCount = 0;
+          try {
+            if (item.photos) photoCount = JSON.parse(item.photos).length;
+          } catch {}
+
+          const standNum = item.stand_number_official || item.stand_number_physical || "Unnumbered";
+
+          return (
+            <TouchableOpacity
+              style={styles.submissionCard}
+              activeOpacity={0.7}
+              onPress={() =>
+                router.push({
+                  pathname: "/(worker)/submission-detail" as any,
+                  params: { id: item.id },
+                })
+              }
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.standNumber}>Stand {standNum}</Text>
+                <View style={[styles.statusBadge, status.style]}>
+                  <Text style={[styles.statusText, status.textStyle]}>{status.text}</Text>
+                </View>
+              </View>
+
+              <Text style={styles.respondentName}>
+                {item.respondent_name || "Unspecified Respondent"}
+              </Text>
+              <Text style={styles.respondentPhone}>
+                {item.respondent_phone || "No phone provided"}
+              </Text>
+
+              <Text style={styles.workerInfo}>
+                Collected by <Text style={styles.bold}>{item.worker_name || "Field Agent"}</Text> •{" "}
+                {formatDate(item.collected_at)}
+              </Text>
+
+              <View style={styles.mediaPills}>
+                {photoCount > 0 && <Text style={styles.mediaPill}>📷 {photoCount}</Text>}
+                {item.audio_recording_key ? <Text style={styles.mediaPill}>🎙️ Audio</Text> : null}
+                {item.signature_key ? <Text style={styles.mediaPill}>✍️ Signed</Text> : null}
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No submissions match your search filter.</Text>
+          </View>
+        }
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  scrollView: { flex: 1 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   title: { fontSize: 22, fontWeight: "700", color: COLORS.cardForeground },
+  subtitle: { fontSize: 13, color: COLORS.mutedForeground, marginTop: 2 },
   filterButton: { padding: 8 },
   filterIcon: { fontSize: 20 },
   filterRow: { flexDirection: "row", paddingHorizontal: 16, gap: 8, marginBottom: 12 },
@@ -247,20 +263,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     marginHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   searchIcon: { fontSize: 16, marginRight: 8 },
   searchInput: { flex: 1, paddingVertical: 12, fontSize: 14, color: COLORS.cardForeground },
-  listContent: { paddingHorizontal: 16, paddingBottom: 16 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 24 },
   submissionCard: {
     backgroundColor: COLORS.card,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: "row",
@@ -276,6 +297,8 @@ const styles = StyleSheet.create({
   pendingText: { color: COLORS.warning, fontSize: 11, fontWeight: "700" },
   flaggedBadge: { backgroundColor: COLORS.errorBg },
   flaggedText: { color: COLORS.error, fontSize: 11, fontWeight: "700" },
+  disputedBadge: { backgroundColor: COLORS.gray100 },
+  disputedText: { color: COLORS.gray600, fontSize: 11, fontWeight: "700" },
   statusText: { fontSize: 11, fontWeight: "700" },
   respondentName: {
     fontSize: 16,
@@ -296,4 +319,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.primaryDark,
   },
+  emptyContainer: { padding: 40, alignItems: "center" },
+  emptyText: { color: COLORS.mutedForeground, fontSize: 14 },
 });

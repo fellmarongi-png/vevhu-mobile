@@ -35,22 +35,39 @@ $$ LANGUAGE plpgsql;
 -- ============================================================
 
 CREATE TABLE users (
-  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  role             user_role        NOT NULL DEFAULT 'worker',
-  full_name        TEXT             NOT NULL,
-  pin_hash         TEXT,
-  email            TEXT             UNIQUE,
-  phone            TEXT,
-  zone_assigned    TEXT,
-  daily_target     INT              NOT NULL DEFAULT 30,
-  is_active        BOOLEAN          NOT NULL DEFAULT TRUE,
-  created_at       TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-  updated_at       TIMESTAMPTZ      NOT NULL DEFAULT NOW()
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  auth_user_id          UUID UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL,
+  role                  user_role        NOT NULL DEFAULT 'worker',
+  full_name             TEXT             NOT NULL,
+  pin_hash              TEXT,
+  email                 TEXT             UNIQUE,
+  phone                 TEXT,
+  zone_assigned         TEXT,
+  daily_target          INT              NOT NULL DEFAULT 30,
+  failed_login_attempts INT              NOT NULL DEFAULT 0,
+  locked_until          TIMESTAMPTZ,
+  is_active             BOOLEAN          NOT NULL DEFAULT TRUE,
+  created_at            TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
+  updated_at            TIMESTAMPTZ      NOT NULL DEFAULT NOW()
 );
 
 CREATE TRIGGER trg_users_updated_at
   BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- ============================================================
+-- HELPER FUNCTIONS FOR RLS & AUTH
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.get_user_role(p_user_id UUID)
+RETURNS user_role
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role FROM users WHERE id = p_user_id AND is_active = TRUE LIMIT 1;
+$$;
 
 -- ============================================================
 -- TABLE: form_schemas
@@ -181,16 +198,25 @@ CREATE TABLE daily_summaries (
 -- INDEXES
 -- ============================================================
 
+CREATE INDEX idx_users_auth_user_id                 ON users(auth_user_id);
+CREATE INDEX idx_form_schemas_created_by            ON form_schemas(created_by);
+CREATE INDEX idx_form_schemas_is_active             ON form_schemas(is_active);
+
 CREATE INDEX idx_submissions_worker_id             ON submissions(worker_id);
 CREATE INDEX idx_submissions_stand_number_official ON submissions(stand_number_official);
 CREATE INDEX idx_submissions_collected_at          ON submissions(collected_at);
 CREATE INDEX idx_submissions_status                ON submissions(status);
+CREATE INDEX idx_submissions_worker_status         ON submissions(worker_id, status);
 
 CREATE INDEX idx_known_stands_stand_number ON known_stands(stand_number);
 CREATE INDEX idx_known_stands_zone         ON known_stands(zone);
+CREATE INDEX idx_known_stands_imported_by  ON known_stands(imported_by);
 
 CREATE INDEX idx_shifts_worker_id     ON shifts(worker_id);
 CREATE INDEX idx_shifts_checked_in_at ON shifts(checked_in_at);
+
+CREATE INDEX idx_announcements_created_by ON announcements(created_by);
+CREATE INDEX idx_announcements_target     ON announcements(target_type, target_id);
 
 CREATE INDEX idx_daily_summaries_date      ON daily_summaries(date);
 CREATE INDEX idx_daily_summaries_worker_id ON daily_summaries(worker_id);
@@ -211,209 +237,172 @@ ALTER TABLE daily_summaries ENABLE ROW LEVEL SECURITY;
 -- RLS POLICIES: users
 -- ============================================================
 
--- Workers see only themselves; managers/admins see all rows.
 CREATE POLICY users_select ON users
-  FOR SELECT USING (
-    auth.uid() = id
-    OR EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR SELECT TO authenticated USING (
+    id = (SELECT auth.uid())
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
--- Only managers/admins can insert/update/delete users.
 CREATE POLICY users_modify ON users
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR ALL TO authenticated USING (
+    get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
 -- ============================================================
 -- RLS POLICIES: form_schemas
 -- ============================================================
 
--- Workers can read active schemas; managers/admins see all.
 CREATE POLICY form_schemas_select ON form_schemas
-  FOR SELECT USING (
+  FOR SELECT TO authenticated USING (
     is_active = TRUE
-    OR EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
--- Only managers/admins can create/update/delete schemas.
 CREATE POLICY form_schemas_modify ON form_schemas
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR ALL TO authenticated USING (
+    get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
 -- ============================================================
 -- RLS POLICIES: submissions
 -- ============================================================
 
--- Workers see only their own; managers/admins see all.
 CREATE POLICY submissions_select ON submissions
-  FOR SELECT USING (
-    worker_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR SELECT TO authenticated USING (
+    worker_id = (SELECT auth.uid())
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
--- Workers can insert their own submissions.
 CREATE POLICY submissions_insert ON submissions
-  FOR INSERT WITH CHECK (worker_id = auth.uid());
+  FOR INSERT TO authenticated WITH CHECK (worker_id = (SELECT auth.uid()));
 
--- Workers can update their own; managers/admins can update all.
 CREATE POLICY submissions_update ON submissions
-  FOR UPDATE USING (
-    worker_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR UPDATE TO authenticated USING (
+    worker_id = (SELECT auth.uid())
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
+  ) WITH CHECK (
+    worker_id = (SELECT auth.uid())
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
--- Only managers/admins can delete submissions.
 CREATE POLICY submissions_delete ON submissions
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR DELETE TO authenticated USING (
+    get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
 -- ============================================================
 -- RLS POLICIES: known_stands
 -- ============================================================
 
--- All authenticated users can read known_stands.
 CREATE POLICY known_stands_select ON known_stands
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+  FOR SELECT TO authenticated USING ((SELECT auth.uid()) IS NOT NULL);
 
--- Only managers/admins can modify known_stands.
 CREATE POLICY known_stands_modify ON known_stands
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR ALL TO authenticated USING (
+    get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
 -- ============================================================
 -- RLS POLICIES: shifts
 -- ============================================================
 
--- Workers see only their own shifts; managers/admins see all.
 CREATE POLICY shifts_select ON shifts
-  FOR SELECT USING (
-    worker_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR SELECT TO authenticated USING (
+    worker_id = (SELECT auth.uid())
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
--- Workers can insert their own shifts.
 CREATE POLICY shifts_insert ON shifts
-  FOR INSERT WITH CHECK (worker_id = auth.uid());
+  FOR INSERT TO authenticated WITH CHECK (worker_id = (SELECT auth.uid()));
 
--- Workers can update their own shifts; managers/admins can update all.
 CREATE POLICY shifts_update ON shifts
-  FOR UPDATE USING (
-    worker_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR UPDATE TO authenticated USING (
+    worker_id = (SELECT auth.uid())
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
+  ) WITH CHECK (
+    worker_id = (SELECT auth.uid())
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
--- Only managers/admins can delete shifts.
 CREATE POLICY shifts_delete ON shifts
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR DELETE TO authenticated USING (
+    get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
 -- ============================================================
 -- RLS POLICIES: announcements
 -- ============================================================
 
--- Workers see announcements targeted at 'all', their worker id, or their zone;
--- managers/admins see everything. Expired announcements are hidden.
 CREATE POLICY announcements_select ON announcements
-  FOR SELECT USING (
+  FOR SELECT TO authenticated USING (
     (expires_at IS NULL OR expires_at > NOW())
     AND (
       target_type = 'all'
-      OR (target_type = 'worker'  AND target_id = auth.uid()::TEXT)
+      OR (target_type = 'worker' AND target_id = (SELECT auth.uid())::TEXT)
       OR (
         target_type = 'zone'
         AND target_id = (
-          SELECT zone_assigned FROM users WHERE id = auth.uid()
+          SELECT zone_assigned FROM users WHERE id = (SELECT auth.uid())
         )
       )
-      OR EXISTS (
-        SELECT 1 FROM users u
-        WHERE u.id = auth.uid()
-          AND u.role IN ('manager', 'admin')
-      )
+      OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
     )
   );
 
--- Only managers/admins can create/update/delete announcements.
 CREATE POLICY announcements_modify ON announcements
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+  FOR ALL TO authenticated USING (
+    get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
   );
 
 -- ============================================================
 -- RLS POLICIES: daily_summaries
 -- ============================================================
 
--- Workers see only their own summaries; managers/admins see all.
 CREATE POLICY daily_summaries_select ON daily_summaries
-  FOR SELECT USING (
-    worker_id = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
+  FOR SELECT TO authenticated USING (
+    worker_id = (SELECT auth.uid())
+    OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
+  );
+
+CREATE POLICY daily_summaries_modify ON daily_summaries
+  FOR ALL TO authenticated USING (
+    get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
+  );
+
+-- ============================================================
+-- STORAGE BUCKET & RLS POLICIES: vevhu-media
+-- ============================================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('vevhu-media', 'vevhu-media', false)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "vevhu_media_insert"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'vevhu-media'
+    AND (storage.foldername(name))[1] = (SELECT auth.uid())::text
+  );
+
+CREATE POLICY "vevhu_media_select"
+  ON storage.objects FOR SELECT TO authenticated
+  USING (
+    bucket_id = 'vevhu-media'
+    AND (
+      (storage.foldername(name))[1] = (SELECT auth.uid())::text
+      OR get_user_role((SELECT auth.uid())) IN ('manager', 'admin')
     )
   );
 
--- Only managers/admins (or service role) can write daily_summaries.
-CREATE POLICY daily_summaries_modify ON daily_summaries
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM users u
-      WHERE u.id = auth.uid()
-        AND u.role IN ('manager', 'admin')
-    )
+CREATE POLICY "vevhu_media_update"
+  ON storage.objects FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'vevhu-media'
+    AND (storage.foldername(name))[1] = (SELECT auth.uid())::text
+  )
+  WITH CHECK (
+    bucket_id = 'vevhu-media'
+    AND (storage.foldername(name))[1] = (SELECT auth.uid())::text
   );
 
 -- ============================================================
@@ -421,3 +410,4 @@ CREATE POLICY daily_summaries_modify ON daily_summaries
 -- ============================================================
 
 ALTER PUBLICATION supabase_realtime ADD TABLE submissions;
+

@@ -80,7 +80,7 @@ serve(async (req) => {
     const zone = url.searchParams.get("zone");
     const status = url.searchParams.get("status");
 
-    // Build query with filters, join users for worker name
+    // Build query with filters, join users for worker name & zone
     let query = adminClient
       .from("submissions")
       .select(`
@@ -88,19 +88,22 @@ serve(async (req) => {
         created_at,
         updated_at,
         worker_id,
-        zone,
         status,
-        notes,
-        photo_urls,
-        audio_url,
+        field_notes,
+        photos,
+        audio_recording_key,
         extra_fields,
-        is_flagged,
         flagged_reason,
-        latitude,
-        longitude,
+        gps_latitude,
+        gps_longitude,
+        stand_number_official,
+        stand_number_physical,
+        respondent_name,
+        respondent_phone,
         users!submissions_worker_id_fkey (
           full_name,
-          role
+          role,
+          zone_assigned
         )
       `)
       .order("created_at", { ascending: false });
@@ -114,11 +117,18 @@ serve(async (req) => {
       toDate.setDate(toDate.getDate() + 1);
       query = query.lt("created_at", toDate.toISOString());
     }
-    if (zone) {
-      query = query.eq("zone", zone);
-    }
     if (status) {
       query = query.eq("status", status);
+    }
+    if (zone) {
+      // Filter by worker zone_assigned via join
+      const { data: zoneWorkers } = await adminClient
+        .from("users")
+        .select("id")
+        .eq("zone_assigned", zone);
+      if (zoneWorkers && zoneWorkers.length > 0) {
+        query = query.in("worker_id", zoneWorkers.map((w) => w.id));
+      }
     }
     if (worker) {
       // Filter by worker name via join
@@ -141,22 +151,27 @@ serve(async (req) => {
     // Map submissions to Excel rows
     const rows = (submissions || []).map((sub: any) => {
       const workerName = sub.users?.full_name || sub.worker_id;
+      const workerZone = sub.users?.zone_assigned || "";
       const extraFields = sub.extra_fields || {};
+      const isFlagged = Boolean(sub.flagged_reason || sub.status === "flagged");
 
       return {
         "ID": sub.id,
         "Created At": sub.created_at ? new Date(sub.created_at).toLocaleString() : "",
         "Updated At": sub.updated_at ? new Date(sub.updated_at).toLocaleString() : "",
         "Worker": workerName,
-        "Zone": sub.zone || "",
+        "Zone": workerZone,
         "Status": sub.status || "",
-        "Notes": sub.notes || "",
-        "Photos": Array.isArray(sub.photo_urls) ? sub.photo_urls.join(", ") : (sub.photo_urls || ""),
-        "Audio": sub.audio_url || "",
-        "Flagged": sub.is_flagged ? "Yes" : "No",
+        "Official Stand": sub.stand_number_official || "",
+        "Physical Stand": sub.stand_number_physical || "",
+        "Respondent": sub.respondent_name || "",
+        "Field Notes": sub.field_notes || "",
+        "Photos": Array.isArray(sub.photos) ? sub.photos.join(", ") : (sub.photos || ""),
+        "Audio Key": sub.audio_recording_key || "",
+        "Flagged": isFlagged ? "Yes" : "No",
         "Flagged Reason": sub.flagged_reason || "",
-        "Latitude": sub.latitude || "",
-        "Longitude": sub.longitude || "",
+        "Latitude": sub.gps_latitude || "",
+        "Longitude": sub.gps_longitude || "",
         // Spread extra_fields as individual columns
         ...Object.fromEntries(
           Object.entries(extraFields).map(([k, v]) => [
