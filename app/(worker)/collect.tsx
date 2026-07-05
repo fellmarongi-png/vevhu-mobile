@@ -10,6 +10,7 @@ import { COLORS } from "../../src/config/app";
 import { useAuth } from "../../src/hooks/useAuth";
 import { useLocation } from "../../src/hooks/useLocation";
 import { useWatchedQuery } from "../../src/hooks/usePowerSync";
+import { processMediaQueue } from "../../src/services/media-sync";
 import { db } from "../../src/services/powersync";
 import { supabase } from "../../src/services/supabase";
 import type { FormSchema } from "../../src/types/form";
@@ -321,6 +322,11 @@ export default function CollectScreen() {
         } catch (syncError) {
           console.log("[Collect] Record saved locally, will sync when online:", syncError);
         }
+
+        // Trigger immediate background processing of queued media files
+        processMediaQueue().catch((err) =>
+          console.warn("[MediaSync] Immediate queue processing error:", err),
+        );
 
         Alert.alert(
           "Saved!",

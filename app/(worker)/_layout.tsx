@@ -1,11 +1,31 @@
+import NetInfo from "@react-native-community/netinfo";
 import { Tabs } from "expo-router";
+import { useEffect } from "react";
 import { Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../src/config/app";
+import { registerBackgroundSync } from "../../src/services/background-sync";
+import { processMediaQueue } from "../../src/services/media-sync";
 
 export default function WorkerLayout() {
   const insets = useSafeAreaInsets();
   const bottomInset = insets.bottom > 0 ? insets.bottom : 8;
+
+  useEffect(() => {
+    registerBackgroundSync().catch((err) =>
+      console.warn("[Sync] Background sync registration:", err),
+    );
+
+    // Process pending media uploads immediately on mount & when network becomes connected
+    processMediaQueue().catch(() => {});
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      if (state.isConnected && state.isInternetReachable) {
+        processMediaQueue().catch((err) => console.warn("[MediaSync] Process queue error:", err));
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <Tabs
