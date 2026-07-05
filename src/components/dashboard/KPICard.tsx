@@ -2,7 +2,7 @@
 // Vevhu Dashboard - KPI Metric Card
 // ---------------------------------------------------------------------------
 
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { COLORS } from "../../config/app";
 import type { KPI } from "../../types/dashboard";
 
@@ -12,8 +12,10 @@ interface KPICardProps {
 }
 
 export function KPICard({ kpi, onPress }: KPICardProps) {
+  const Container = onPress ? TouchableOpacity : View;
+
   return (
-    <View style={styles.card}>
+    <Container style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.header}>
         <Text style={styles.label}>{kpi.label}</Text>
         {kpi.trend && (
@@ -28,7 +30,7 @@ export function KPICard({ kpi, onPress }: KPICardProps) {
       </View>
       <Text style={styles.value}>{kpi.value}</Text>
       {kpi.icon && <Text style={styles.icon}>{kpi.icon}</Text>}
-    </View>
+    </Container>
   );
 }
 

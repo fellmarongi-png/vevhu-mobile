@@ -95,6 +95,11 @@ export default function WorkerLayout() {
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 22 }}>⚙️</Text>,
         }}
       />
+      <Tabs.Screen name="dashboard" options={{ href: null }} />
+      <Tabs.Screen name="workers" options={{ href: null }} />
+      <Tabs.Screen name="submissions" options={{ href: null }} />
+      <Tabs.Screen name="submission-detail" options={{ href: null }} />
+      <Tabs.Screen name="map" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -209,8 +209,8 @@ export default function DashboardScreen() {
 
         {/* KPI Cards */}
         <View style={styles.kpiRow}>
-          {mockKPIs.map((kpi, index) => (
-            <KPICard key={index} kpi={kpi} />
+          {mockKPIs.map((kpi) => (
+            <KPICard key={kpi.label} kpi={kpi} />
           ))}
         </View>
 

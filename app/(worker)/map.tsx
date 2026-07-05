@@ -3,19 +3,8 @@
 // ---------------------------------------------------------------------------
 
 import { useState } from "react";
-import {
-  Dimensions,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { COLORS } from "../../src/config/app";
-
-const { width } = Dimensions.get("window");
 
 // Mock data
 const mockMarkers = [
@@ -67,12 +56,22 @@ export default function MapScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.title}>Field Map</Text>
-          <Text style={styles.subtitle}>{activeWorkers} active workers</Text>
+          <Text style={styles.title}>Field Map ({selectedLayer.toUpperCase()})</Text>
+          <Text style={styles.subtitle}>
+            {activeWorkers} active workers • {totalSubmissions} total stands ({pendingSyncs}{" "}
+            pending)
+          </Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.layerButton}>
-            <Text style={styles.layerButtonText}>🗺️ Layers</Text>
+          <TouchableOpacity
+            style={styles.layerButton}
+            onPress={() =>
+              setSelectedLayer((prev) =>
+                prev === "all" ? "workers" : prev === "workers" ? "submissions" : "all",
+              )
+            }
+          >
+            <Text style={styles.layerButtonText}>🗺️ Layers ({selectedLayer})</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.fullscreenButton}>
             <Text style={styles.fullscreenButtonText}>⛶</Text>

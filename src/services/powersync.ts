@@ -148,7 +148,6 @@ let _connector: SupabaseConnector | null = null;
 
 export async function setupPowerSync(): Promise<void> {
   if (_initialized) return;
-  _initialized = true;
 
   try {
     if (!_connector) {
@@ -156,11 +155,20 @@ export async function setupPowerSync(): Promise<void> {
     }
     const instance = getPowerSyncDb();
     await instance.init();
-    await instance.connect(_connector);
-    console.log("[PowerSync] Connected and syncing");
+    _initialized = true;
+
+    try {
+      await instance.connect(_connector);
+      console.log("[PowerSync] Connected and syncing");
+    } catch (connectErr) {
+      console.warn(
+        "[PowerSync] Could not connect to remote sync service (operating in offline local SQLite mode):",
+        connectErr,
+      );
+    }
   } catch (err) {
     _initialized = false;
-    console.error("[PowerSync] setupPowerSync failed:", err);
+    console.error("[PowerSync] Local database initialization failed:", err);
     throw err;
   }
 }

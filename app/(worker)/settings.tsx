@@ -2,7 +2,6 @@
 // Vevhu Field - Settings Screen
 // ---------------------------------------------------------------------------
 
-import { useState } from "react";
 import {
   Alert,
   SafeAreaView,
@@ -94,18 +93,26 @@ const settingsGroups: SettingItem[][] = [
   ],
 ];
 
-export default function SettingsScreen() {
-  const [logoutPressed, setLogoutPressed] = useState(false);
+import { router } from "expo-router";
+import { logout } from "../../src/services/auth";
 
+export default function SettingsScreen() {
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: () => Alert.alert("Logged out", "You have been logged out successfully"),
-      },
-    ]);
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout? Unsynced data will remain stored safely on your device.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+            router.replace("/login");
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -134,7 +141,7 @@ export default function SettingsScreen() {
 
         {/* Settings Groups */}
         {settingsGroups.map((group, groupIndex) => (
-          <View key={groupIndex} style={styles.settingsGroup}>
+          <View key={`group-${group[0]?.id || groupIndex}`} style={styles.settingsGroup}>
             {group.map((item) => (
               <TouchableOpacity
                 key={item.id}
@@ -165,11 +172,7 @@ export default function SettingsScreen() {
         ))}
 
         {/* Logout Button */}
-        <TouchableOpacity
-          style={[styles.logoutButton, logoutPressed && styles.logoutButtonPressed]}
-          onPress={handleLogout}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 

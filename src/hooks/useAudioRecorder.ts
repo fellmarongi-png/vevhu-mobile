@@ -28,7 +28,7 @@ export function useVevhuAudioRecorder() {
       if (!granted) return false;
     }
     await recorder.prepareToRecordAsync();
-    recorder.record();
+    await recorder.record();
     return true;
   }, [hasPermission, recorder, requestPermission]);
 
@@ -37,7 +37,7 @@ export function useVevhuAudioRecorder() {
   }, [recorder]);
 
   const resumeRecording = useCallback(async () => {
-    recorder.record();
+    await recorder.record();
   }, [recorder]);
 
   const stopRecording = useCallback(async () => {

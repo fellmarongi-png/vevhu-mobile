@@ -62,11 +62,11 @@ export default function SubmissionDetailScreen() {
   const status = getStatusBadge(mockSubmission.status);
 
   const handleExportPDF = () => {
-    Alert.alert("Export", "PDF export initiated for Stand " + mockSubmission.standNumber);
+    Alert.alert("Export", `PDF export initiated for Stand ${mockSubmission.standNumber}`);
   };
 
   const handlePrint = () => {
-    Alert.alert("Print", "Print job sent for Stand " + mockSubmission.standNumber);
+    Alert.alert("Print", `Print job sent for Stand ${mockSubmission.standNumber}`);
   };
 
   const handleFlagReview = () => {
@@ -142,9 +142,9 @@ export default function SubmissionDetailScreen() {
           <View style={styles.detailCard}>
             <Text style={styles.cardTitle}>📷 Photos ({mockSubmission.photos})</Text>
             <View style={styles.photoGrid}>
-              {Array.from({ length: mockSubmission.photos }).map((_, i) => (
+              {["photo-1", "photo-2", "photo-3"].slice(0, mockSubmission.photos).map((pKey, i) => (
                 <TouchableOpacity
-                  key={i}
+                  key={pKey}
                   style={styles.photoThumb}
                   onPress={() => {
                     setSelectedPhoto(i);
