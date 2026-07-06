@@ -232,11 +232,16 @@ export default function ProgressScreen() {
   // Submissions Query (My vs Team)
   const querySql =
     filterMode === "my"
-      ? `SELECT s.*, u.full_name AS worker_name FROM submissions s LEFT JOIN users u ON s.worker_id = u.id WHERE (s.worker_id = ? OR s.worker_id = '' OR s.worker_id IS NULL) ORDER BY s.collected_at DESC LIMIT 50`
-      : `SELECT s.*, u.full_name AS worker_name FROM submissions s LEFT JOIN users u ON s.worker_id = u.id ORDER BY s.collected_at DESC LIMIT 100`;
+      ? `SELECT * FROM submissions WHERE (worker_id = ? OR worker_id = '' OR worker_id IS NULL) ORDER BY collected_at DESC LIMIT 50`
+      : `SELECT * FROM submissions ORDER BY collected_at DESC LIMIT 100`;
 
   const queryParams = filterMode === "my" ? [effectiveUserId] : [];
-  const { data: submissions } = useQuery<SubmissionRow>(querySql, queryParams);
+  const { data: rawSubmissions } = useQuery<SubmissionRow>(querySql, queryParams);
+
+  const submissions = (rawSubmissions ?? []).map((sub) => ({
+    ...sub,
+    worker_name: sub.worker_id === user?.id ? user?.full_name || "Field Agent" : "Field Agent",
+  }));
 
   // Filter by search query
   const filteredSubmissions = (submissions ?? []).filter((sub) => {

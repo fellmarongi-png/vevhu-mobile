@@ -200,3 +200,10 @@ export async function getQueueStats(): Promise<QueueStats> {
 
   return stats;
 }
+
+/**
+ * Clears uploaded items from local media_queue table to free storage.
+ */
+export async function clearMediaCache(): Promise<void> {
+  await db.execute(`DELETE FROM media_queue WHERE upload_status = 'uploaded'`);
+}
