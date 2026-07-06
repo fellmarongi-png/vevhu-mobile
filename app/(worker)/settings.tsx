@@ -331,10 +331,6 @@ export default function SettingsScreen() {
                 Tap "Retry Failed Media Uploads" on the Settings screen to trigger background
                 uploading.
               </Text>
-              <Text style={styles.faqQ}>Q: Who do I contact for support?</Text>
-              <Text style={styles.faqA}>
-                Contact your Vevhu team supervisor or email support@vevhu.com.
-              </Text>
             </ScrollView>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => setActiveModal(null)}>
               <Text style={styles.modalCloseBtnText}>Close</Text>

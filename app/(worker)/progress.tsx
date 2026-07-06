@@ -1,6 +1,7 @@
 import { useQuery } from "@powersync/react-native";
 import { format, formatISO, startOfDay, startOfWeek } from "date-fns";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { router } from "expo-router";
 import { useContext, useState } from "react";
 import {
   FlatList,
@@ -79,9 +80,27 @@ function DetailModal({
           <Text style={styles.modalTitle}>
             Stand #{submission.stand_number_official || submission.stand_number_physical || "N/A"}
           </Text>
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeBtnText}>✕ Close</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#F3772D",
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 8,
+              }}
+              onPress={() => {
+                onClose();
+                router.push({ pathname: "/(worker)/collect", params: { edit_id: submission.id } });
+              }}
+            >
+              <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 13 }}>
+                ✏️ Edit Record
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <Text style={styles.closeBtnText}>✕ Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <FlatList

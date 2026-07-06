@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -157,6 +157,8 @@ export default function CollectScreen() {
   const { user } = useAuth();
   const { captureLocation } = useLocation();
   const formRef = useRef<DynamicFormRef>(null);
+  const params = useLocalSearchParams<{ edit_id?: string; stand?: string }>();
+  const editId = params.edit_id;
 
   const { data: schemaRows } = useWatchedQuery<{
     fields: string;
@@ -164,6 +166,35 @@ export default function CollectScreen() {
     version: number;
     name: string;
   }>("SELECT * FROM form_schemas WHERE is_active = 1 ORDER BY version DESC LIMIT 1");
+
+  const { data: editRows } = useWatchedQuery<any>(
+    editId ? `SELECT * FROM submissions WHERE id = '${editId}' LIMIT 1` : "SELECT 1 WHERE 1=0",
+  );
+
+  const existingRecord = editRows?.[0] ?? null;
+
+  const initialFormValues = useMemo(() => {
+    if (existingRecord) {
+      return {
+        stand_number_official: existingRecord.stand_number_official || "",
+        stand_number_physical: existingRecord.stand_number_physical || "",
+        is_legal_owner: Boolean(existingRecord.is_legal_owner),
+        respondent_type: existingRecord.respondent_type || "Registered Owner",
+        respondent_name: existingRecord.respondent_name || "",
+        respondent_phone: existingRecord.respondent_phone || "",
+        owner_name: existingRecord.owner_name || "",
+        owner_phone: existingRecord.owner_phone || "",
+        account_standing: existingRecord.account_standing || "Yes",
+        action_taken: existingRecord.action_taken || "",
+        field_notes: existingRecord.field_notes || "",
+      };
+    }
+    return {
+      stand_number_official: params.stand || "",
+      is_legal_owner: true,
+      account_standing: "Yes",
+    };
+  }, [existingRecord, params.stand]);
 
   const activeSchema: FormSchema = useMemo(() => {
     if (schemaRows && schemaRows.length > 0 && schemaRows[0].fields) {
@@ -258,35 +289,72 @@ export default function CollectScreen() {
           : str(formData.owner_phone);
 
         await db.writeTransaction(async (tx) => {
-          await tx.execute(
-            `INSERT INTO submissions (id, worker_id, form_schema_version, stand_number_official, stand_number_physical, respondent_type, respondent_name, respondent_phone, is_legal_owner, owner_name, owner_phone, account_standing, action_taken, field_notes, extra_fields, gps_latitude, gps_longitude, gps_accuracy, photos, audio_recording_key, audio_duration_seconds, signature_key, status, collected_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              submissionId,
-              user?.id || "a0000000-0000-0000-0000-000000000001",
-              DEFAULT_SCHEMA.version,
-              str(formData.stand_number_official),
-              str(formData.stand_number_physical),
-              str(formData.respondent_type) || (isOwner ? "Registered Owner" : "Tenant"),
-              str(formData.respondent_name),
-              str(formData.respondent_phone),
-              isOwner ? 1 : 0,
-              finalOwnerName,
-              finalOwnerPhone,
-              str(formData.account_standing),
-              str(formData.action_taken),
-              str(formData.field_notes),
-              JSON.stringify(extraFields),
-              gps?.latitude ?? null,
-              gps?.longitude ?? null,
-              gps?.accuracy ?? null,
-              JSON.stringify(photosPayload),
-              audioUri ? audioUri : null,
-              audioDuration ? Math.floor(audioDuration / 1000) : null,
-              signature ? signature : null,
-              "pending",
-              now,
-            ],
-          );
+          if (editId) {
+            // Record audit trail entry for admin review
+            await tx.execute(
+              `INSERT INTO submission_edits (id, submission_id, edited_by_worker_id, edited_by_worker_name, previous_data, updated_data, edit_reason, edited_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                uuid(),
+                editId,
+                user?.id || "a0000000-0000-0000-0000-000000000001",
+                user?.full_name || "Field Worker",
+                JSON.stringify(existingRecord || {}),
+                JSON.stringify(formData),
+                "Updated survey record details",
+                now,
+              ],
+            );
+
+            // Update existing submission record
+            await tx.execute(
+              `UPDATE submissions SET stand_number_official = ?, stand_number_physical = ?, respondent_type = ?, respondent_name = ?, respondent_phone = ?, is_legal_owner = ?, owner_name = ?, owner_phone = ?, account_standing = ?, action_taken = ?, field_notes = ?, extra_fields = ?, status = 'pending' WHERE id = ?`,
+              [
+                str(formData.stand_number_official),
+                str(formData.stand_number_physical),
+                str(formData.respondent_type) || (isOwner ? "Registered Owner" : "Tenant"),
+                str(formData.respondent_name),
+                str(formData.respondent_phone),
+                isOwner ? 1 : 0,
+                finalOwnerName,
+                finalOwnerPhone,
+                str(formData.account_standing),
+                str(formData.action_taken),
+                str(formData.field_notes),
+                JSON.stringify(extraFields),
+                editId,
+              ],
+            );
+          } else {
+            await tx.execute(
+              `INSERT INTO submissions (id, worker_id, form_schema_version, stand_number_official, stand_number_physical, respondent_type, respondent_name, respondent_phone, is_legal_owner, owner_name, owner_phone, account_standing, action_taken, field_notes, extra_fields, gps_latitude, gps_longitude, gps_accuracy, photos, audio_recording_key, audio_duration_seconds, signature_key, status, collected_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [
+                submissionId,
+                user?.id || "a0000000-0000-0000-0000-000000000001",
+                DEFAULT_SCHEMA.version,
+                str(formData.stand_number_official),
+                str(formData.stand_number_physical),
+                str(formData.respondent_type) || (isOwner ? "Registered Owner" : "Tenant"),
+                str(formData.respondent_name),
+                str(formData.respondent_phone),
+                isOwner ? 1 : 0,
+                finalOwnerName,
+                finalOwnerPhone,
+                str(formData.account_standing),
+                str(formData.action_taken),
+                str(formData.field_notes),
+                JSON.stringify(extraFields),
+                gps?.latitude ?? null,
+                gps?.longitude ?? null,
+                gps?.accuracy ?? null,
+                JSON.stringify(photosPayload),
+                audioUri ? audioUri : null,
+                audioDuration ? Math.floor(audioDuration / 1000) : null,
+                signature ? signature : null,
+                "pending",
+                now,
+              ],
+            );
+          }
 
           // Queue photos for background upload
           for (const photo of photos) {
@@ -341,7 +409,18 @@ export default function CollectScreen() {
         setSaving(false);
       }
     },
-    [photos, audioUri, audioDuration, signature, user, captureLocation, resetForm, saving],
+    [
+      photos,
+      audioUri,
+      audioDuration,
+      signature,
+      user,
+      captureLocation,
+      resetForm,
+      saving,
+      editId,
+      existingRecord,
+    ],
   );
 
   const handleSavePress = useCallback(() => {
@@ -355,7 +434,7 @@ export default function CollectScreen() {
         ref={formRef}
         schema={activeSchema}
         onSubmit={handleFormSubmit}
-        defaultValues={{ is_legal_owner: true, account_standing: "Yes" }}
+        defaultValues={initialFormValues}
       />
 
       <View style={styles.mediaSection}>

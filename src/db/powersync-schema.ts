@@ -92,6 +92,19 @@ const media_queue = new Table(
   { indexes: { status: ["upload_status"], submission: ["submission_id"] } },
 );
 
+const submission_edits = new Table(
+  {
+    submission_id: column.text,
+    edited_by_worker_id: column.text,
+    edited_by_worker_name: column.text,
+    edited_at: column.text,
+    previous_data: column.text,
+    updated_data: column.text,
+    edit_reason: column.text,
+  },
+  { indexes: { sub: ["submission_id"] } },
+);
+
 export const AppSchema = new Schema({
   submissions,
   known_stands,
@@ -99,6 +112,7 @@ export const AppSchema = new Schema({
   announcements,
   shifts,
   media_queue,
+  submission_edits,
 });
 
 export type Database = (typeof AppSchema)["types"];

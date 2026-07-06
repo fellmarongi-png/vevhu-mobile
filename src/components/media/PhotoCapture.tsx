@@ -1,5 +1,15 @@
 import * as ImagePicker from "expo-image-picker";
-import { Alert, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { COLORS } from "../../config/app";
 
 interface PhotoCaptureProps {
@@ -9,6 +19,8 @@ interface PhotoCaptureProps {
 }
 
 export function PhotoCapture({ photos, onPhotosChange, minRequired = 1 }: PhotoCaptureProps) {
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
+
   const takePhoto = async (type: "stand" | "document") => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
@@ -44,16 +56,37 @@ export function PhotoCapture({ photos, onPhotosChange, minRequired = 1 }: PhotoC
           keyExtractor={(_, i) => i.toString()}
           renderItem={({ item, index }) => (
             <View style={styles.photoWrapper}>
-              <Image source={{ uri: item.uri }} style={styles.thumbnail} />
+              <TouchableOpacity onPress={() => setPreviewUri(item.uri)}>
+                <Image source={{ uri: item.uri }} style={styles.thumbnail} />
+              </TouchableOpacity>
               <TouchableOpacity style={styles.removeBtn} onPress={() => removePhoto(index)}>
                 <Text style={styles.removeBtnText}>X</Text>
               </TouchableOpacity>
-              <Text style={styles.photoType}>{item.type}</Text>
+              <Text style={styles.photoType}>🔍 {item.type}</Text>
             </View>
           )}
           style={styles.photoList}
         />
       )}
+
+      {/* Lightbox Preview Modal */}
+      <Modal visible={!!previewUri} animationType="fade" transparent>
+        <View style={styles.modalBg}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalHeader}>📷 Photo Inspection Preview</Text>
+            {previewUri && (
+              <Image
+                source={{ uri: previewUri }}
+                style={styles.fullPreviewImage}
+                resizeMode="contain"
+              />
+            )}
+            <TouchableOpacity style={styles.closeModalBtn} onPress={() => setPreviewUri(null)}>
+              <Text style={styles.closeModalBtnText}>Close Preview</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.buttons}>
         <TouchableOpacity style={styles.captureBtn} onPress={() => takePhoto("stand")}>
@@ -99,4 +132,28 @@ const styles = StyleSheet.create({
   },
   docBtn: { backgroundColor: COLORS.warning },
   captureBtnText: { color: COLORS.white, fontWeight: "600" },
+  modalBg: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  modalCard: {
+    width: "100%",
+    maxHeight: "80%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    alignItems: "center",
+  },
+  modalHeader: { fontSize: 16, fontWeight: "700", color: "#1C1917", marginBottom: 12 },
+  fullPreviewImage: { width: "100%", height: 300, borderRadius: 12, marginBottom: 16 },
+  closeModalBtn: {
+    backgroundColor: "#F3772D",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+  },
+  closeModalBtnText: { color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
 });
