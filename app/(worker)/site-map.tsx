@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   Image,
+  Modal,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -40,6 +41,7 @@ export default function SiteMapScreen() {
   const [selectedStand, setSelectedStand] = useState<StandCoordinate | null>(
     SPITZKOP_STANDS_PRESETS[0],
   );
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const { data: dbSubmissions } = useQuery<SubmissionPin>(
     "SELECT id, stand_number_official, stand_number_physical, respondent_name, status, gps_latitude, gps_longitude FROM submissions ORDER BY collected_at DESC",
@@ -81,9 +83,17 @@ export default function SiteMapScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Text style={styles.title}>📍 Spitzkop Lot 6 Site Plan</Text>
-          <TouchableOpacity style={styles.refreshBtn} onPress={handleRefreshLocation}>
-            <Text style={styles.refreshBtnText}>🎯 Recenter GPS</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 6 }}>
+            <TouchableOpacity
+              style={[styles.refreshBtn, { backgroundColor: "#F3772D" }]}
+              onPress={() => setIsExpanded(true)}
+            >
+              <Text style={[styles.refreshBtnText, { color: "#FFFFFF" }]}>🔍 Expand</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.refreshBtn} onPress={handleRefreshLocation}>
+              <Text style={styles.refreshBtnText}>🎯 GPS</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <Text style={styles.subtitle}>
           Interactive Cadastral Survey Diagram • Triangle Area Lot 6
@@ -199,6 +209,87 @@ export default function SiteMapScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Fullscreen Expanded Map Modal */}
+      <Modal visible={isExpanded} animationType="fade" presentationStyle="fullScreen">
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#1C1917" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: "#292524",
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "700" }}>
+              🔍 Spitzkop Lot 6 Cadastral Plan (Expanded View)
+            </Text>
+            <TouchableOpacity
+              onPress={() => setIsExpanded(false)}
+              style={{
+                backgroundColor: "#F3772D",
+                borderRadius: 8,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+              }}
+            >
+              <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>✕ Close</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView
+            horizontal
+            contentContainerStyle={{ flexGrow: 1 }}
+            maximumZoomScale={3}
+            minimumZoomScale={1}
+          >
+            <ScrollView
+              contentContainerStyle={{
+                flexGrow: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <View style={{ width: 600, height: 600, position: "relative" }}>
+                <Image
+                  source={require("../../assets/maps/spitzkop_lot6_triangle.png")}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="contain"
+                />
+                {/* Live Worker Marker */}
+                <View
+                  style={[
+                    styles.workerGpsMarker,
+                    { left: `${workerMapPos.xPercent}%`, top: `${workerMapPos.yPercent}%` },
+                  ]}
+                >
+                  <View style={styles.workerGpsPulseRing} />
+                  <View style={styles.workerGpsCenterDot} />
+                  <Text style={styles.workerGpsLabel}>YOU</Text>
+                </View>
+                {/* Stand Pins */}
+                {SPITZKOP_STANDS_PRESETS.map((stand) => (
+                  <TouchableOpacity
+                    key={stand.stand_number}
+                    style={[
+                      styles.standPin,
+                      { left: `${stand.xPercent}%`, top: `${stand.yPercent}%` },
+                      selectedStand?.stand_number === stand.stand_number && styles.standPinSelected,
+                    ]}
+                    onPress={() => {
+                      setSelectedStand(stand);
+                      setIsExpanded(false);
+                    }}
+                  >
+                    <Text style={styles.standPinText}>#{stand.stand_number}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }

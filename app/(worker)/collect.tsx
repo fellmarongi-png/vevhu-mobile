@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,7 +12,7 @@ import { useAuth } from "../../src/hooks/useAuth";
 import { useLocation } from "../../src/hooks/useLocation";
 import { useWatchedQuery } from "../../src/hooks/usePowerSync";
 import { processMediaQueue } from "../../src/services/media-sync";
-import { db } from "../../src/services/powersync";
+import { db, syncPendingSubmissionsDirectly } from "../../src/services/powersync";
 import type { FormSchema } from "../../src/types/form";
 
 const DEFAULT_SCHEMA: FormSchema = {
@@ -204,6 +205,8 @@ export default function CollectScreen() {
 
   const handleFormSubmit = useCallback(
     async (formData: Record<string, unknown>) => {
+      if (saving) return;
+
       if (photos.length < 1) {
         Alert.alert("Photo Required", "Please take at least one photo of the stand.");
         return;
@@ -310,15 +313,27 @@ export default function CollectScreen() {
           }
         });
 
-        // Trigger immediate background processing of queued media files
+        // Trigger immediate background processing of queued media files & pending database sync
         processMediaQueue().catch((err) =>
           console.warn("[MediaSync] Immediate queue processing error:", err),
+        );
+        syncPendingSubmissionsDirectly().catch((err) =>
+          console.warn("[SyncEngine] Immediate submission sync error:", err),
         );
 
         Alert.alert(
           "Saved!",
           "Record saved successfully. It will sync automatically with the dashboard.",
-          [{ text: "Collect Another", onPress: resetForm }, { text: "Done" }],
+          [
+            { text: "Collect Another", onPress: resetForm },
+            {
+              text: "Done",
+              onPress: () => {
+                resetForm();
+                router.replace("/(worker)");
+              },
+            },
+          ],
         );
       } catch (error: any) {
         Alert.alert("Error", error.message || "Failed to save record");
@@ -326,14 +341,13 @@ export default function CollectScreen() {
         setSaving(false);
       }
     },
-    [photos, audioUri, audioDuration, signature, user, captureLocation, resetForm],
+    [photos, audioUri, audioDuration, signature, user, captureLocation, resetForm, saving],
   );
 
   const handleSavePress = useCallback(() => {
-    // Delegate to react-hook-form's handleSubmit via the ref — this runs
-    // validation on all registered fields before calling handleFormSubmit.
+    if (saving) return;
     formRef.current?.submit();
-  }, []);
+  }, [saving]);
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">

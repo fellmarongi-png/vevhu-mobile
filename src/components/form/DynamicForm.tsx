@@ -40,10 +40,16 @@ export const DynamicForm = forwardRef<DynamicFormRef, DynamicFormProps>(function
   const respondentType = watchedValues.respondent_type;
 
   useEffect(() => {
-    if (isLegalOwner === true && respondentType !== "Registered Owner") {
-      setValue("respondent_type", "Registered Owner");
-    } else if (respondentType === "Registered Owner" && isLegalOwner !== true) {
-      setValue("is_legal_owner", true);
+    // If is_legal_owner is toggled YES, set respondent_type to Registered Owner
+    if (isLegalOwner === true) {
+      if (respondentType !== "Registered Owner") {
+        setValue("respondent_type", "Registered Owner");
+      }
+    } else if (isLegalOwner === false) {
+      // If is_legal_owner is toggled NO, switch respondent_type away from Registered Owner to Tenant
+      if (respondentType === "Registered Owner" || !respondentType) {
+        setValue("respondent_type", "Tenant");
+      }
     }
   }, [isLegalOwner, respondentType, setValue]);
 

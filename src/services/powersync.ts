@@ -135,6 +135,76 @@ export const db = new Proxy({} as PowerSyncDatabase, {
   },
 });
 
+/**
+ * Direct Fallback Sync Engine:
+ * Uploads all locally pending submissions to Supabase Postgres when online.
+ * Updates local status from 'pending' to 'synced'.
+ */
+export async function syncPendingSubmissionsDirectly(): Promise<void> {
+  try {
+    const instance = getPowerSyncDb();
+    const pendingRows = await instance.getAll<any>(
+      "SELECT * FROM submissions WHERE status = 'pending' ORDER BY collected_at ASC",
+    );
+
+    if (!pendingRows || pendingRows.length === 0) return;
+
+    for (const row of pendingRows) {
+      const payload = {
+        id: row.id,
+        worker_id: row.worker_id,
+        form_schema_version: row.form_schema_version || 1,
+        stand_number_official: row.stand_number_official,
+        stand_number_physical: row.stand_number_physical,
+        respondent_type: row.respondent_type,
+        respondent_name: row.respondent_name,
+        respondent_phone: row.respondent_phone,
+        is_legal_owner: Boolean(row.is_legal_owner),
+        owner_name: row.owner_name,
+        owner_phone: row.owner_phone,
+        account_standing: row.account_standing,
+        action_taken: row.action_taken,
+        field_notes: row.field_notes,
+        extra_fields: row.extra_fields
+          ? typeof row.extra_fields === "string"
+            ? JSON.parse(row.extra_fields)
+            : row.extra_fields
+          : {},
+        gps_latitude: row.gps_latitude,
+        gps_longitude: row.gps_longitude,
+        gps_accuracy: row.gps_accuracy,
+        photos: row.photos
+          ? typeof row.photos === "string"
+            ? JSON.parse(row.photos)
+            : row.photos
+          : [],
+        audio_recording_key: row.audio_recording_key,
+        audio_duration_seconds: row.audio_duration_seconds,
+        signature_key: row.signature_key,
+        status: "synced",
+        collected_at: row.collected_at,
+        synced_at: new Date().toISOString(),
+      };
+
+      const { error } = await (supabase as any)
+        .from("submissions")
+        .upsert(payload, { onConflict: "id" });
+
+      if (!error) {
+        await instance.execute(
+          "UPDATE submissions SET status = 'synced', synced_at = ? WHERE id = ?",
+          [new Date().toISOString(), row.id],
+        );
+        console.log(`[SyncEngine] Successfully synced submission ${row.id} to Supabase`);
+      } else {
+        console.warn(`[SyncEngine] Sync notice for submission ${row.id}:`, error.message);
+      }
+    }
+  } catch (err) {
+    console.warn("[SyncEngine] Background sync fallback notice:", err);
+  }
+}
+
 // --- Setup Helper -------------------------------------------------------------
 
 let _initialized = false;
@@ -160,6 +230,9 @@ export async function setupPowerSync(): Promise<void> {
         connectErr,
       );
     }
+
+    // Trigger immediate background sync check for pending submissions
+    syncPendingSubmissionsDirectly().catch(() => {});
   } catch (err) {
     _initialized = false;
     console.error("[PowerSync] Local database initialization failed:", err);

@@ -1,8 +1,9 @@
 import { useQuery } from "@powersync/react-native";
 import { formatDistanceToNow } from "date-fns";
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useState } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { COLORS } from "../../src/config/app";
+import { useAuth } from "../../src/hooks/useAuth";
 import { db } from "../../src/services/powersync";
 import { AuthContext } from "../_layout";
 
@@ -42,34 +43,37 @@ function safeRelativeTime(dateStr: string): string {
 
 export default function AnnouncementsScreen() {
   const { session } = useContext(AuthContext);
-  const userId = session?.user?.id ?? "";
+  const { user } = useAuth();
+  const [readItemIds, setReadItemIds] = useState<string[]>([]);
+
+  const effectiveUserId = user?.id || session?.user?.id || "a0000000-0000-0000-0000-000000000001";
 
   const { data: announcements, isLoading } = useQuery<Announcement>(
     "SELECT * FROM announcements ORDER BY created_at DESC",
   );
 
-  const unreadCount = (announcements ?? []).filter(
-    (a) => !isReadByUser(a.is_read_by, userId),
-  ).length;
+  const isItemRead = (item: Announcement) => {
+    if (readItemIds.includes(item.id)) return true;
+    return isReadByUser(item.is_read_by, effectiveUserId);
+  };
+
+  const unreadCount = (announcements ?? []).filter((a) => !isItemRead(a)).length;
 
   const markAsRead = useCallback(
     async (item: Announcement) => {
-      if (!userId || isReadByUser(item.is_read_by, userId)) return;
+      setReadItemIds((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
 
       try {
-        // Parse existing readers (gracefully handle malformed JSON)
         let readers: string[] = [];
         if (item.is_read_by) {
           try {
             const parsed = JSON.parse(item.is_read_by);
             if (Array.isArray(parsed)) readers = parsed;
-          } catch {
-            // is_read_by was not valid JSON — start fresh
-          }
+          } catch {}
         }
 
-        if (!readers.includes(userId)) {
-          readers.push(userId);
+        if (!readers.includes(effectiveUserId)) {
+          readers.push(effectiveUserId);
         }
 
         await db.execute("UPDATE announcements SET is_read_by = ? WHERE id = ?", [
@@ -80,7 +84,7 @@ export default function AnnouncementsScreen() {
         console.warn("[Announcements] markAsRead error:", err);
       }
     },
-    [userId],
+    [effectiveUserId],
   );
 
   // ---------------------------------------------------------------------------
@@ -117,7 +121,7 @@ export default function AnnouncementsScreen() {
           initialNumToRender={8}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
-            const read = isReadByUser(item.is_read_by, userId);
+            const read = isItemRead(item);
             return (
               <TouchableOpacity
                 style={[styles.card, !read && styles.cardUnread]}

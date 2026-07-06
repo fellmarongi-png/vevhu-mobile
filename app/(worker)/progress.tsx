@@ -6,6 +6,7 @@ import {
   FlatList,
   Image,
   Modal,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -208,12 +209,21 @@ export default function ProgressScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubmission, setSelectedSubmission] = useState<SubmissionRow | null>(null);
 
+  const [selectedWorkerFilter, setSelectedWorkerFilter] = useState<string>("all");
+
   const todayStart = formatISO(startOfDay(new Date()), { representation: "date" });
   const weekStart = formatISO(startOfWeek(new Date(), { weekStartsOn: 1 }), {
     representation: "date",
   });
 
   const effectiveUserId = userId || user?.id || "a0000000-0000-0000-0000-000000000001";
+
+  // Known field workers map fallback
+  const knownWorkersMap: Record<string, string> = {
+    "a0000000-0000-0000-0000-000000000001": "John Doe",
+    "a0000000-0000-0000-0000-000000000002": "Tendai Moyo",
+    "a0000000-0000-0000-0000-000000000003": "Farai Shumba",
+  };
 
   // Summary Counts
   const { data: myToday } = useQuery<{ count: number }>(
@@ -238,13 +248,26 @@ export default function ProgressScreen() {
   const queryParams = filterMode === "my" ? [effectiveUserId] : [];
   const { data: rawSubmissions } = useQuery<SubmissionRow>(querySql, queryParams);
 
-  const submissions = (rawSubmissions ?? []).map((sub) => ({
-    ...sub,
-    worker_name: sub.worker_id === user?.id ? user?.full_name || "Field Agent" : "Field Agent",
-  }));
+  const submissions = (rawSubmissions ?? []).map((sub) => {
+    let resolvedName = "Field Agent";
+    if (sub.worker_id === user?.id && user?.full_name) {
+      resolvedName = user.full_name;
+    } else if (sub.worker_id && knownWorkersMap[sub.worker_id]) {
+      resolvedName = knownWorkersMap[sub.worker_id];
+    } else if (sub.worker_id) {
+      resolvedName = `Agent (${sub.worker_id.slice(0, 6)})`;
+    }
+    return {
+      ...sub,
+      worker_name: resolvedName,
+    };
+  });
 
-  // Filter by search query
+  // Filter by search query & selected worker filter
   const filteredSubmissions = (submissions ?? []).filter((sub) => {
+    if (selectedWorkerFilter !== "all" && sub.worker_name !== selectedWorkerFilter) {
+      return false;
+    }
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -364,6 +387,43 @@ export default function ProgressScreen() {
           placeholderTextColor="#999"
         />
       </View>
+
+      {/* Team Worker Filter Selector */}
+      {filterMode === "team" && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 10 }}
+          contentContainerStyle={{ gap: 8, paddingHorizontal: 2 }}
+        >
+          {["all", "Tendai Moyo", "John Doe", "Farai Shumba"].map((wName) => {
+            const isActive = selectedWorkerFilter === wName;
+            const label = wName === "all" ? "🌐 All Workers" : `👤 ${wName}`;
+            return (
+              <TouchableOpacity
+                key={wName}
+                onPress={() => setSelectedWorkerFilter(wName)}
+                style={{
+                  backgroundColor: isActive ? COLORS.primary : "#E7E5E4",
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                }}
+              >
+                <Text
+                  style={{
+                    color: isActive ? "#FFFFFF" : "#44403C",
+                    fontSize: 12,
+                    fontWeight: "600",
+                  }}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
 
       {/* Record Submissions List */}
       <FlatList
