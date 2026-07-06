@@ -152,6 +152,23 @@ export async function setupPowerSync(): Promise<void> {
     _initialized = true;
 
     try {
+      // Seed default announcements if SQLite table is empty
+      const existingRows = await instance.getAll<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM announcements",
+      );
+      if (!existingRows?.[0]?.count) {
+        await instance.execute(
+          `INSERT INTO announcements (id, title, message, target_type, is_read_by, created_at) VALUES 
+          ('ann-spitzkop-01', '📢 Spitzkop Lot 6 Priority Audit', 'All field workers assigned to Spitzkop Lot 6: Please inspect stands 1042 through 1048 today and submit site photos with GPS verification.', 'all', '[]', datetime('now')),
+          ('ann-welcome-02', '⚡ System Sync & Offline Mode Active', 'Offline data collection is active. All collected records, audio notes, and photos store locally first and sync automatically.', 'all', '[]', datetime('now', '-1 hour'))`,
+        );
+        console.log("[PowerSync] Seeded initial system announcements");
+      }
+    } catch (seedErr) {
+      console.warn("[PowerSync] Announcement seed notice:", seedErr);
+    }
+
+    try {
       await instance.connect(_connector);
       console.log("[PowerSync] Connected and syncing");
     } catch (connectErr) {
