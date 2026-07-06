@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Vevhu Field",
+    "name": "Vevhu Resources",
     "slug": "vevhu-field",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "vevhu-field",
+    "scheme": "vevhu-resources",
     "platforms": ["android", "web"],
     "icon": "./assets/images/icon.png",
     "android": {
@@ -13,7 +13,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
-        "backgroundColor": "#F59E0B"
+        "backgroundColor": "#F3772D"
       },
       "permissions": [
         "android.permission.CAMERA",
@@ -36,7 +36,7 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Allow Vevhu Field to record visit conversations for verification.",
+          "microphonePermission": "Allow Vevhu Resources to record visit conversations for verification.",
           "enableBackgroundRecording": true,
           "recordAudioAndroid": true
         }
@@ -44,21 +44,21 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Vevhu Field to take photos of stands and documents."
+          "cameraPermission": "Allow Vevhu Resources to take photos of stands and documents."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Vevhu Field to track your location for field verification.",
+          "locationAlwaysAndWhenInUsePermission": "Allow Vevhu Resources to track your location for field verification.",
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Vevhu Field to access photos.",
-          "cameraPermission": "Allow Vevhu Field to take photos."
+          "photosPermission": "Allow Vevhu Resources to access photos.",
+          "cameraPermission": "Allow Vevhu Resources to take photos."
         }
       ],
       [
@@ -66,7 +66,7 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#F59E0B"
+          "backgroundColor": "#F3772D"
         }
       ],
       "expo-asset",
