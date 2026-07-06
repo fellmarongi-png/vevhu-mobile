@@ -94,6 +94,13 @@ export default function WorkerLayout() {
         }}
       />
       <Tabs.Screen
+        name="site-map"
+        options={{
+          title: "Site Map",
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 22 }}>📍</Text>,
+        }}
+      />
+      <Tabs.Screen
         name="progress"
         options={{
           title: "Progress",
